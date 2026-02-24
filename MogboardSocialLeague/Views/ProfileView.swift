@@ -894,12 +894,12 @@ struct ProfileView: View {
     private var titleProgressBar: some View {
         let sessions = sessionViewModel.userResults.count
         let titles: [(String, Int, Color)] = [
-            ("Rookie", 1, MogboardTheme.accent),
-            ("Contender", 3, .cyan),
-            ("Warrior", 6, .blue),
-            ("Beast", 11, .purple),
-            ("Mogger", 21, .orange),
-            ("Apex Mogger", 51, .red)
+            ("Low-Tier Normie", 1, MogboardTheme.accent),
+            ("Mid", 3, .cyan),
+            ("Visibly Stressed", 6, .blue),
+            ("Cortisol-Pilled", 11, .purple),
+            ("Low-Cortisol Chad", 21, .orange),
+            ("The Unfeeling", 51, .red)
         ]
         let currentTitle = authViewModel.currentUser?.currentTitle ?? "Unranked"
         let currentIdx = titles.firstIndex(where: { $0.0 == currentTitle }) ?? -1
@@ -942,10 +942,10 @@ struct ProfileView: View {
 
     private var titleColor: Color {
         switch authViewModel.currentUser?.currentTitle {
-        case "Apex Mogger": .red
-        case "Mogger": .orange
-        case "Beast": .purple
-        case "Warrior": .blue
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
         default: MogboardTheme.accent
         }
     }

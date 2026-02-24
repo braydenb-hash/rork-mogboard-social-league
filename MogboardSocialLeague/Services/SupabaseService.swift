@@ -323,11 +323,11 @@ class SupabaseService {
 
     func seedDemoData(leagueId: UUID) async throws {
         let demoNames = [
-            ("Zephyr", "Warrior"),
-            ("Nyx", "Beast"),
-            ("Krono", "Contender"),
-            ("Sable", "Rookie"),
-            ("Vex", "Mogger")
+            ("Zephyr", "Visibly Stressed"),
+            ("Nyx", "Cortisol-Pilled"),
+            ("Krono", "Mid"),
+            ("Sable", "Low-Tier Normie"),
+            ("Vex", "Low-Cortisol Chad")
         ]
 
         var demoUserIds: [UUID] = []
@@ -433,7 +433,7 @@ class SupabaseService {
             userId: achieveUser,
             eventType: "achievement",
             title: "Title Earned",
-            description: "Reached Mogger status"
+            description: "Reached Low-Cortisol Chad status"
         )
         try await client.from("feed_events")
             .insert(achieveFeed)

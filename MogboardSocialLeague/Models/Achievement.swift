@@ -25,15 +25,15 @@ struct Achievement: Identifiable {
         [
             Achievement(
                 id: "first_blood",
-                name: "FIRST BLOOD",
-                description: "Complete your first session",
+                name: "CLINICALLY ALIVE",
+                description: "Proved you have a heartbeat.",
                 icon: "drop.fill",
                 tier: .bronze,
                 isUnlocked: sessionsPlayed >= 1
             ),
             Achievement(
                 id: "five_deep",
-                name: "FIVE DEEP",
+                name: "FIVE GRINDS DEEP",
                 description: "Complete 5 sessions",
                 icon: "flame.fill",
                 tier: .bronze,
@@ -49,8 +49,8 @@ struct Achievement: Identifiable {
             ),
             Achievement(
                 id: "grinder",
-                name: "GRINDER",
-                description: "Complete 25 sessions",
+                name: "GOONER",
+                description: "25 sessions. You have a problem.",
                 icon: "hammer.fill",
                 tier: .gold,
                 isUnlocked: sessionsPlayed >= 25
@@ -81,43 +81,83 @@ struct Achievement: Identifiable {
             ),
             Achievement(
                 id: "cardiac",
-                name: "CARDIAC EVENT",
-                description: "Hit 180+ BPM in a session",
+                name: "SAW A GHOST",
+                description: "Hit 180+ BPM. Something scared you.",
                 icon: "bolt.heart.fill",
                 tier: .gold,
                 isUnlocked: peakBpm >= 180
             ),
             Achievement(
                 id: "redline",
-                name: "REDLINE",
-                description: "Average 150+ BPM in a session",
+                name: "CORTISOL MAXXING",
+                description: "Averaged 150+ BPM. Stress is your personality.",
                 icon: "waveform.path.ecg",
                 tier: .gold,
                 isUnlocked: bestAvgBpm >= 150
             ),
             Achievement(
                 id: "streaker",
-                name: "STREAKER",
-                description: "Maintain a 3-day streak",
+                name: "NOT DEAD YET",
+                description: "3-day streak. Barely.",
                 icon: "flame.circle.fill",
                 tier: .silver,
                 isUnlocked: streak >= 3
             ),
             Achievement(
                 id: "week_warrior",
-                name: "WEEK WARRIOR",
-                description: "Maintain a 7-day streak",
+                name: "WEEK GOONER",
+                description: "7-day streak. Seek help.",
                 icon: "calendar.badge.checkmark",
                 tier: .gold,
                 isUnlocked: streak >= 7
             ),
             Achievement(
                 id: "unstoppable",
-                name: "UNSTOPPABLE",
-                description: "Complete 50 sessions",
+                name: "THIS IS YOUR WHOLE PERSONALITY",
+                description: "50 sessions. There is no going back.",
                 icon: "figure.run",
                 tier: .legendary,
                 isUnlocked: sessionsPlayed >= 50
+            ),
+            Achievement(
+                id: "jump_scare",
+                name: "JUMP SCARE",
+                description: "HR spiked 50+ BPM fast. Something got you.",
+                icon: "bolt.fill",
+                tier: .bronze,
+                isUnlocked: false
+            ),
+            Achievement(
+                id: "caught_simping",
+                name: "CAUGHT SIMPING",
+                description: "Sustained elevated HR on a Friday or Saturday night. The data doesn't lie.",
+                icon: "heart.fill",
+                tier: .silver,
+                isUnlocked: false
+            ),
+            Achievement(
+                id: "horror_movie_victim",
+                name: "HORROR MOVIE VICTIM",
+                description: "Hit 150+ BPM after 9 PM. It was just a movie.",
+                icon: "moon.fill",
+                tier: .bronze,
+                isUnlocked: false
+            ),
+            Achievement(
+                id: "caffeine_fiend",
+                name: "CAFFEINE FIEND",
+                description: "Resting HR way above average before 10 AM. You need that.",
+                icon: "cup.and.saucer.fill",
+                tier: .bronze,
+                isUnlocked: false
+            ),
+            Achievement(
+                id: "the_sloth",
+                name: "THE SLOTH",
+                description: "Lowest avg HR in the group for a week. Ice in your veins. Respect.",
+                icon: "tortoise.fill",
+                tier: .gold,
+                isUnlocked: false
             ),
         ]
     }

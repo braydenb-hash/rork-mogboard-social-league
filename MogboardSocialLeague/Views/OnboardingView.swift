@@ -9,7 +9,7 @@ struct OnboardingView: View {
     private let pages: [(icon: String, title: String, subtitle: String, color: Color)] = [
         ("bolt.heart.fill", "MOG OR\nGET MOGGED", "Heart rate league for your friend group.\nCompete, compare, and call each other out.", Color(red: 0.75, green: 1.0, blue: 0.0)),
         ("waveform.path.ecg", "TRACK\nYOUR HEART", "Real-time BPM tracking during sessions.\nEarn points based on intensity and duration.", .red),
-        ("trophy.fill", "CLIMB THE\nLEADERBOARD", "Every session counts toward your rank.\nGo from Rookie to Apex Mogger.", .orange),
+        ("trophy.fill", "CLIMB THE\nLEADERBOARD", "Every session counts toward your rank.\nGo from Low-Tier Normie to The Unfeeling.", .orange),
         ("person.3.fill", "BRING\nYOUR CREW", "Create a league. Share the code.\nSee who's really putting in work.", .cyan),
     ]
 

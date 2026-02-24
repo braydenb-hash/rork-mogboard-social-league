@@ -13,7 +13,7 @@ nonisolated struct MogboardEntry: TimelineEntry {
 
 nonisolated struct MogboardProvider: TimelineProvider {
     func placeholder(in context: Context) -> MogboardEntry {
-        MogboardEntry(date: .now, streak: 3, totalPoints: 450, sessionsThisWeek: 4, rank: 1, title: "Mogger", displayName: "PLAYER")
+        MogboardEntry(date: .now, streak: 3, totalPoints: 450, sessionsThisWeek: 4, rank: 1, title: "Low-Cortisol Chad", displayName: "PLAYER")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (MogboardEntry) -> Void) {
@@ -100,10 +100,10 @@ struct MogboardWidgetSmall: View {
 
     private var titleColor: Color {
         switch entry.title {
-        case "Apex Mogger": .red
-        case "Mogger": .orange
-        case "Beast": .purple
-        case "Warrior": .blue
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
         default: accentColor
         }
     }
@@ -189,10 +189,10 @@ struct MogboardWidgetMedium: View {
 
     private var titleColor: Color {
         switch entry.title {
-        case "Apex Mogger": .red
-        case "Mogger": .orange
-        case "Beast": .purple
-        case "Warrior": .blue
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
         default: accentColor
         }
     }

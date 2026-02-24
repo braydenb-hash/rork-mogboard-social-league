@@ -398,10 +398,10 @@ struct MemberDetailView: View {
 
     private var titleColor: Color {
         switch member.users?.currentTitle {
-        case "Apex Mogger": .red
-        case "Mogger": .orange
-        case "Beast": .purple
-        case "Warrior": .blue
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
         default: MogboardTheme.accent
         }
     }

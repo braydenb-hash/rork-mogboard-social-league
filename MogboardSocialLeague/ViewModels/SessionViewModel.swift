@@ -295,12 +295,12 @@ class SessionViewModel {
         let title: String
         switch totalSessions {
         case 0: title = "Unranked"
-        case 1...2: title = "Rookie"
-        case 3...5: title = "Contender"
-        case 6...10: title = "Warrior"
-        case 11...20: title = "Beast"
-        case 21...50: title = "Mogger"
-        default: title = "Apex Mogger"
+        case 1...2: title = "Low-Tier Normie"
+        case 3...5: title = "Mid"
+        case 6...10: title = "Visibly Stressed"
+        case 11...20: title = "Cortisol-Pilled"
+        case 21...50: title = "Low-Cortisol Chad"
+        default: title = "The Unfeeling"
         }
 
         let oldTitle = previousTitle ?? currentTitle(for: userResults.count)
@@ -316,12 +316,12 @@ class SessionViewModel {
     private func currentTitle(for sessionCount: Int) -> String {
         switch sessionCount {
         case 0: "Unranked"
-        case 1...2: "Rookie"
-        case 3...5: "Contender"
-        case 6...10: "Warrior"
-        case 11...20: "Beast"
-        case 21...50: "Mogger"
-        default: "Apex Mogger"
+        case 1...2: "Low-Tier Normie"
+        case 3...5: "Mid"
+        case 6...10: "Visibly Stressed"
+        case 11...20: "Cortisol-Pilled"
+        case 21...50: "Low-Cortisol Chad"
+        default: "The Unfeeling"
         }
     }
 }

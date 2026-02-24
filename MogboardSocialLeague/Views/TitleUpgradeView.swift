@@ -46,7 +46,7 @@ struct TitleUpgradeView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("TITLE UNLOCKED")
+                    Text("FRAME UPGRADED")
                         .font(.system(size: 12, weight: .black))
                         .foregroundStyle(titleColor)
                         .tracking(3)
@@ -124,24 +124,24 @@ struct TitleUpgradeView: View {
 
     private var titleColor: Color {
         switch newTitle {
-        case "Apex Mogger": .red
-        case "Mogger": .orange
-        case "Beast": .purple
-        case "Warrior": .blue
-        case "Contender": .cyan
-        case "Rookie": MogboardTheme.accent
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
+        case "Mid": .cyan
+        case "Low-Tier Normie": MogboardTheme.accent
         default: MogboardTheme.accent
         }
     }
 
     private var titleIcon: String {
         switch newTitle {
-        case "Apex Mogger": "bolt.heart.fill"
-        case "Mogger": "crown.fill"
-        case "Beast": "flame.fill"
-        case "Warrior": "shield.fill"
-        case "Contender": "trophy.fill"
-        case "Rookie": "star.fill"
+        case "The Unfeeling": "bolt.heart.fill"
+        case "Low-Cortisol Chad": "crown.fill"
+        case "Cortisol-Pilled": "flame.fill"
+        case "Visibly Stressed": "shield.fill"
+        case "Mid": "trophy.fill"
+        case "Low-Tier Normie": "star.fill"
         default: "star.fill"
         }
     }
