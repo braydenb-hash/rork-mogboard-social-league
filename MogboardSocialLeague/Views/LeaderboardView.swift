@@ -8,6 +8,9 @@ struct LeaderboardView: View {
     @State private var selectedFilter: LeaderboardFilter = .allTime
     @State private var viewModel = LeagueViewModel()
     @State private var selectedMember: LeagueMemberWithUser?
+    @State private var bettingViewModel = BettingViewModel()
+    @State private var showPlaceBet = false
+    @State private var showDebtBoard = false
 
     enum LeaderboardFilter: String, CaseIterable {
         case weekly = "WEEK"
@@ -97,6 +100,8 @@ struct LeaderboardView: View {
                     VStack(spacing: 16) {
                         filterPicker
 
+                        bettingBanner
+
                         if sessionViewModel.leaderboardEntries.isEmpty && sessionViewModel.isLoading {
                             VStack(spacing: 10) {
                                 SkeletonStatRow()
@@ -130,6 +135,11 @@ struct LeaderboardView: View {
                 if let leagueId = authViewModel.currentLeague?.id {
                     await sessionViewModel.fetchLeaderboard(leagueId: leagueId)
                     await viewModel.fetchMembers(leagueId: leagueId)
+                    await bettingViewModel.fetchBets(leagueId: leagueId)
+                    if let userId = authViewModel.currentUser?.id {
+                        await bettingViewModel.fetchPendingBets(userId: userId, leagueId: leagueId)
+                    }
+                    bettingViewModel.computeDebtLeaderboard(members: viewModel.members)
                 }
                 withAnimation(.spring(response: 0.5)) {
                     appeared = true
@@ -140,6 +150,11 @@ struct LeaderboardView: View {
                 if let leagueId = authViewModel.currentLeague?.id {
                     await sessionViewModel.fetchLeaderboard(leagueId: leagueId)
                     await viewModel.fetchMembers(leagueId: leagueId)
+                    await bettingViewModel.fetchBets(leagueId: leagueId)
+                    if let userId = authViewModel.currentUser?.id {
+                        await bettingViewModel.fetchPendingBets(userId: userId, leagueId: leagueId)
+                    }
+                    bettingViewModel.computeDebtLeaderboard(members: viewModel.members)
                 }
                 withAnimation(.spring(response: 0.5)) {
                     appeared = true
@@ -151,6 +166,23 @@ struct LeaderboardView: View {
                     leagueId: authViewModel.currentLeague?.id ?? UUID(),
                     sessionViewModel: sessionViewModel
                 )
+            }
+            .navigationDestination(isPresented: $showDebtBoard) {
+                DebtLeaderboardView(
+                    authViewModel: authViewModel,
+                    bettingViewModel: bettingViewModel,
+                    members: viewModel.members
+                )
+            }
+            .sheet(isPresented: $showPlaceBet) {
+                NavigationStack {
+                    PlaceBetView(
+                        authViewModel: authViewModel,
+                        bettingViewModel: bettingViewModel,
+                        members: viewModel.members,
+                        sessionId: nil
+                    )
+                }
             }
         }
     }
@@ -351,6 +383,81 @@ struct LeaderboardView: View {
             }
         }
         .padding(.horizontal, 20)
+    }
+
+    private var bettingBanner: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Button {
+                    showPlaceBet = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                        Text("PLACE BET")
+                            .font(.system(size: 12, weight: .black))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 42)
+                    .background(Color.green)
+                    .clipShape(.rect(cornerRadius: 10))
+                }
+
+                Button {
+                    showDebtBoard = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "banknote")
+                            .font(.system(size: 16, weight: .bold))
+                        Text("DEBTS")
+                            .font(.system(size: 12, weight: .black))
+
+                        if !bettingViewModel.debtEntries.isEmpty {
+                            Text("\(bettingViewModel.debtEntries.count)")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundStyle(.black)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(MogboardTheme.accent)
+                                .clipShape(.rect(cornerRadius: 4))
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 42)
+                    .background(MogboardTheme.cardBackground)
+                    .clipShape(.rect(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(MogboardTheme.cardBorder, lineWidth: 1)
+                    )
+                }
+            }
+
+            if !bettingViewModel.pendingBets.isEmpty {
+                let count = bettingViewModel.pendingBets.count
+                HStack(spacing: 6) {
+                    Image(systemName: "bell.badge.fill")
+                        .font(.system(size: 11))
+                    Text("\(count) PENDING BET\(count > 1 ? "S" : "") — TAP DEBTS TO RESPOND")
+                        .font(.system(size: 10, weight: .black))
+                }
+                .foregroundStyle(.orange)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(Color.orange.opacity(0.08))
+                .clipShape(.rect(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                )
+            }
+        }
+        .padding(.horizontal, 20)
+        .opacity(appeared ? 1 : 0)
+        .animation(.spring(response: 0.4).delay(0.05), value: appeared)
     }
 
     private func initials(for name: String) -> String {

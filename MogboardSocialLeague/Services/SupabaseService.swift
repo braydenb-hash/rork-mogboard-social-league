@@ -440,6 +440,108 @@ class SupabaseService {
             .execute()
     }
 
+    func createBet(leagueId: UUID, sessionId: UUID?, createdBy: UUID, opponentId: UUID, amount: Double) async throws -> Bet {
+        let bet = Bet(
+            id: UUID(),
+            leagueId: leagueId,
+            sessionId: sessionId,
+            createdBy: createdBy,
+            opponentId: opponentId,
+            amount: amount,
+            status: "pending",
+            winnerId: nil,
+            settledViaVenmo: false,
+            createdAt: nil
+        )
+        try await client.from("bets")
+            .insert(bet)
+            .execute()
+        return bet
+    }
+
+    func acceptBet(betId: UUID) async throws {
+        try await client.from("bets")
+            .update(["status": "active"])
+            .eq("id", value: betId.uuidString)
+            .execute()
+    }
+
+    func declineBet(betId: UUID) async throws {
+        try await client.from("bets")
+            .update(["status": "declined"])
+            .eq("id", value: betId.uuidString)
+            .execute()
+    }
+
+    func settleBet(betId: UUID, winnerId: UUID) async throws {
+        struct BetUpdate: Codable, Sendable {
+            let status: String
+            let winnerId: UUID
+
+            enum CodingKeys: String, CodingKey {
+                case status
+                case winnerId = "winner_id"
+            }
+        }
+        let update = BetUpdate(status: "settled", winnerId: winnerId)
+        try await client.from("bets")
+            .update(update)
+            .eq("id", value: betId.uuidString)
+            .execute()
+    }
+
+    func markBetVenmoSettled(betId: UUID) async throws {
+        try await client.from("bets")
+            .update(["settled_via_venmo": "true"])
+            .eq("id", value: betId.uuidString)
+            .execute()
+    }
+
+    func fetchBets(leagueId: UUID) async throws -> [Bet] {
+        let bets: [Bet] = try await client.from("bets")
+            .select()
+            .eq("league_id", value: leagueId.uuidString)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        return bets
+    }
+
+    func fetchUserBets(userId: UUID, leagueId: UUID) async throws -> [Bet] {
+        let asCreator: [Bet] = try await client.from("bets")
+            .select()
+            .eq("league_id", value: leagueId.uuidString)
+            .eq("created_by", value: userId.uuidString)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+
+        let asOpponent: [Bet] = try await client.from("bets")
+            .select()
+            .eq("league_id", value: leagueId.uuidString)
+            .eq("opponent_id", value: userId.uuidString)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+
+        let combined = (asCreator + asOpponent)
+            .sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+        var seen = Set<UUID>()
+        return combined.filter { seen.insert($0.id).inserted }
+    }
+
+    func fetchPendingBetsForUser(userId: UUID, leagueId: UUID) async throws -> [Bet] {
+        let bets: [Bet] = try await client.from("bets")
+            .select()
+            .eq("league_id", value: leagueId.uuidString)
+            .eq("opponent_id", value: userId.uuidString)
+            .eq("status", value: "pending")
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        return bets
+    }
+
     private func generateInviteCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
         return String((0..<6).map { _ in chars.randomElement()! })
