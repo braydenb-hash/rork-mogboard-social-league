@@ -30,22 +30,27 @@ struct RosterView: View {
                                 }
                                 Spacer()
 
-                                VStack(alignment: .trailing, spacing: 2) {
-                                    Text("CODE")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(MogboardTheme.mutedText)
-                                    Text(league.inviteCode)
-                                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                                        .foregroundStyle(MogboardTheme.accent)
+                                Button {
+                                    UIPasteboard.general.string = league.inviteCode
+                                } label: {
+                                    VStack(alignment: .trailing, spacing: 2) {
+                                        Text("CODE")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(MogboardTheme.mutedText)
+                                        Text(league.inviteCode)
+                                            .font(.system(.caption, design: .monospaced, weight: .bold))
+                                            .foregroundStyle(MogboardTheme.accent)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(MogboardTheme.cardBackground)
+                                    .clipShape(.rect(cornerRadius: 8))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(MogboardTheme.cardBorder, lineWidth: 1)
+                                    )
                                 }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(MogboardTheme.cardBackground)
-                                .clipShape(.rect(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(MogboardTheme.cardBorder, lineWidth: 1)
-                                )
+                                .sensoryFeedback(.success, trigger: league.inviteCode)
                             }
                             .padding(.horizontal, 20)
                             .padding(.top, 8)
@@ -75,17 +80,28 @@ struct RosterView: View {
                         .padding(.horizontal, 20)
                         .sensoryFeedback(.impact(weight: .medium), trigger: showStartSession)
 
-                        if viewModel.members.isEmpty {
+                        if viewModel.isLoading && viewModel.members.isEmpty {
+                            VStack(spacing: 10) {
+                                ForEach(0..<4, id: \.self) { _ in
+                                    SkeletonCard()
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                        } else if viewModel.members.isEmpty {
                             VStack(spacing: 12) {
+                                Spacer().frame(height: 40)
                                 Image(systemName: "person.3")
                                     .font(.system(size: 40))
                                     .foregroundStyle(MogboardTheme.mutedText)
-                                Text("Loading roster...")
+                                Text("NO MEMBERS YET")
+                                    .font(.system(size: 22, weight: .black, design: .default).width(.compressed))
+                                    .foregroundStyle(.white)
+                                Text("Share your invite code to\nget your crew on board")
                                     .font(.subheadline)
                                     .foregroundStyle(MogboardTheme.mutedText)
+                                    .multilineTextAlignment(.center)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.top, 60)
                         } else {
                             LazyVStack(spacing: 10) {
                                 ForEach(Array(viewModel.members.enumerated()), id: \.element.id) { index, member in
@@ -99,6 +115,20 @@ struct RosterView: View {
                                         )
                                     }
                                     .buttonStyle(.plain)
+                                    .contextMenu {
+                                        Button {
+                                            selectedMember = member
+                                        } label: {
+                                            Label("View Profile", systemImage: "person.fill")
+                                        }
+                                        if let name = member.users?.displayName {
+                                            Button {
+                                                UIPasteboard.general.string = name
+                                            } label: {
+                                                Label("Copy Name", systemImage: "doc.on.doc")
+                                            }
+                                        }
+                                    }
                                     .opacity(appeared ? 1 : 0)
                                     .offset(y: appeared ? 0 : 15)
                                     .animation(.spring(response: 0.4).delay(Double(index) * 0.04), value: appeared)

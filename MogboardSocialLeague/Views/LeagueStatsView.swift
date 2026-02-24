@@ -51,6 +51,15 @@ struct LeagueStatsView: View {
                     appeared = true
                 }
             }
+            .refreshable {
+                appeared = false
+                if let leagueId = authViewModel.currentLeague?.id {
+                    await sessionViewModel.fetchLeaderboard(leagueId: leagueId)
+                }
+                withAnimation(.spring(response: 0.5)) {
+                    appeared = true
+                }
+            }
         }
     }
 

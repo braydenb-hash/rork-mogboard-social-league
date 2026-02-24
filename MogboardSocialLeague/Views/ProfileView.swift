@@ -152,9 +152,11 @@ struct ProfileView: View {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(MogboardTheme.mutedText)
                 }
+
+                titleProgressBar
             }
 
-            if streak > 0 {
+            if streak > 0 || streakAtRisk {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 12))
@@ -163,11 +165,24 @@ struct ProfileView: View {
                     Text("\(streak) DAY STREAK")
                         .font(.system(size: 11, weight: .black))
                         .foregroundStyle(.orange)
+                    if streakAtRisk {
+                        Text("AT RISK")
+                            .font(.system(size: 8, weight: .black))
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.red.opacity(0.15))
+                            .clipShape(.rect(cornerRadius: 4))
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color.orange.opacity(0.1))
+                .background(streakAtRisk ? Color.red.opacity(0.08) : Color.orange.opacity(0.1))
                 .clipShape(.rect(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(streakAtRisk ? Color.red.opacity(0.2) : .clear, lineWidth: 1)
+                )
             }
         }
         .padding(.top, 24)
@@ -650,22 +665,30 @@ struct ProfileView: View {
 
             LazyVStack(spacing: 8) {
                 ForEach(sessionViewModel.sessionHistory.prefix(3)) { item in
-                    MogCard {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.session.name.uppercased())
-                                    .font(.system(size: 12, weight: .black))
-                                    .foregroundStyle(.white)
-                                Text("\(item.displayDate) · \(item.durationLabel)")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(MogboardTheme.mutedText)
+                    NavigationLink(destination: SessionDetailView(item: item)) {
+                        MogCard {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.session.name.uppercased())
+                                        .font(.system(size: 12, weight: .black))
+                                        .foregroundStyle(.white)
+                                    Text("\(item.displayDate) · \(item.durationLabel)")
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundStyle(MogboardTheme.mutedText)
+                                }
+                                Spacer()
+                                HStack(spacing: 6) {
+                                    Text("\(item.result.points) PTS")
+                                        .font(.system(.subheadline, design: .monospaced, weight: .black))
+                                        .foregroundStyle(MogboardTheme.accent)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(MogboardTheme.mutedText)
+                                }
                             }
-                            Spacer()
-                            Text("\(item.result.points) PTS")
-                                .font(.system(.subheadline, design: .monospaced, weight: .black))
-                                .foregroundStyle(MogboardTheme.accent)
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 20)
@@ -680,6 +703,47 @@ struct ProfileView: View {
             bestAvgBpm: highestAvgBpm,
             streak: streak
         )
+    }
+
+    private var titleProgressBar: some View {
+        let sessions = sessionViewModel.userResults.count
+        let titles: [(String, Int, Color)] = [
+            ("Rookie", 1, MogboardTheme.accent),
+            ("Contender", 3, .cyan),
+            ("Warrior", 6, .blue),
+            ("Beast", 11, .purple),
+            ("Mogger", 21, .orange),
+            ("Apex Mogger", 51, .red)
+        ]
+        let currentTitle = authViewModel.currentUser?.currentTitle ?? "Unranked"
+        let currentIdx = titles.firstIndex(where: { $0.0 == currentTitle }) ?? -1
+        let nextIdx = currentIdx + 1
+
+        return Group {
+            if nextIdx < titles.count {
+                let next = titles[nextIdx]
+                let prevThreshold = currentIdx >= 0 ? titles[currentIdx].1 : 0
+                let progress = min(1.0, Double(sessions - prevThreshold) / Double(next.1 - prevThreshold))
+
+                VStack(spacing: 4) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(MogboardTheme.cardBorder)
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(next.2.opacity(0.7))
+                                .frame(width: geo.size.width * max(0.02, progress))
+                        }
+                    }
+                    .frame(width: 120, height: 4)
+
+                    Text("\(next.1 - sessions) to \(next.0)")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(next.2.opacity(0.6))
+                }
+                .padding(.top, 4)
+            }
+        }
     }
 
     private var initials: String {
@@ -727,12 +791,22 @@ struct ProfileView: View {
         guard !sessionViewModel.sessionHistory.isEmpty else { return 0 }
         let calendar = Calendar.current
         var currentStreak = 0
-        var checkDate = calendar.startOfDay(for: Date())
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
         let sessionDays = Set(sessionViewModel.sessionHistory.compactMap { item -> Date? in
             guard let date = item.result.completedAt else { return nil }
             return calendar.startOfDay(for: date)
         })
+
+        var checkDate: Date
+        if sessionDays.contains(today) {
+            checkDate = today
+        } else if sessionDays.contains(yesterday) {
+            checkDate = yesterday
+        } else {
+            return 0
+        }
 
         while sessionDays.contains(checkDate) {
             currentStreak += 1
@@ -740,6 +814,17 @@ struct ProfileView: View {
             checkDate = prev
         }
         return currentStreak
+    }
+
+    private var streakAtRisk: Bool {
+        guard streak > 0 else { return false }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let sessionDays = Set(sessionViewModel.sessionHistory.compactMap { item -> Date? in
+            guard let date = item.result.completedAt else { return nil }
+            return calendar.startOfDay(for: date)
+        })
+        return !sessionDays.contains(today)
     }
 
     private var sessionsThisWeek: Int {

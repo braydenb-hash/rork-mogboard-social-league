@@ -14,7 +14,45 @@ struct LeaderboardView: View {
     }
 
     private var filteredEntries: [LeaderboardEntry] {
-        sessionViewModel.leaderboardEntries
+        let calendar = Calendar.current
+        let now = Date()
+        switch selectedFilter {
+        case .weekly:
+            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
+            return filterEntriesByDate(after: weekAgo)
+        case .monthly:
+            let monthAgo = calendar.date(byAdding: .month, value: -1, to: now)!
+            return filterEntriesByDate(after: monthAgo)
+        case .allTime:
+            return sessionViewModel.leaderboardEntries
+        }
+    }
+
+    private func filterEntriesByDate(after date: Date) -> [LeaderboardEntry] {
+        let filtered = sessionViewModel.filteredResults.filter { result in
+            guard let completedAt = result.completedAt else { return false }
+            return completedAt >= date
+        }
+        var entriesByUser: [UUID: LeaderboardEntry] = [:]
+        for entry in sessionViewModel.leaderboardEntries {
+            entriesByUser[entry.id] = LeaderboardEntry(id: entry.id, user: entry.user, totalPoints: 0, sessionsPlayed: 0, avgBpm: 0, wins: 0)
+        }
+        var bpmSums: [UUID: Double] = [:]
+        var bpmCounts: [UUID: Int] = [:]
+        for result in filtered {
+            entriesByUser[result.userId]?.totalPoints += result.points
+            entriesByUser[result.userId]?.sessionsPlayed += 1
+            bpmSums[result.userId, default: 0] += result.avgBpm
+            bpmCounts[result.userId, default: 0] += 1
+        }
+        for (uid, sum) in bpmSums {
+            if let count = bpmCounts[uid], count > 0 {
+                entriesByUser[uid]?.avgBpm = sum / Double(count)
+            }
+        }
+        return entriesByUser.values
+            .filter { $0.sessionsPlayed > 0 }
+            .sorted { $0.totalPoints > $1.totalPoints }
     }
 
     var body: some View {
@@ -95,6 +133,7 @@ struct LeaderboardView: View {
         )
         .padding(.horizontal, 20)
         .padding(.top, 8)
+        .sensoryFeedback(.selection, trigger: selectedFilter)
     }
 
     private var emptyState: some View {

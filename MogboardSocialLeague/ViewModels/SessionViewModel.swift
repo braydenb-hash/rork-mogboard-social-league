@@ -21,6 +21,7 @@ class SessionViewModel {
     var userResults: [SessionResult] = []
     var sessionHistory: [SessionWithResult] = []
     var memberResults: [SessionResult] = []
+    var filteredResults: [SessionResult] = []
 
     private let supabase = SupabaseService.shared
     private let healthKit = HealthKitService.shared
@@ -168,6 +169,7 @@ class SessionViewModel {
     func fetchLeaderboard(leagueId: UUID) async {
         do {
             let results = try await supabase.fetchSessionResults(leagueId: leagueId)
+            filteredResults = results.map { SessionResult(id: $0.id, sessionId: $0.sessionId, userId: $0.userId, avgBpm: $0.avgBpm, maxBpm: $0.maxBpm, minBpm: $0.minBpm, points: $0.points, completedAt: $0.completedAt) }
             let members = try await supabase.fetchLeagueMembers(leagueId: leagueId)
 
             var entriesByUser: [UUID: LeaderboardEntry] = [:]
