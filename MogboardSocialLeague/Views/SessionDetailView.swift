@@ -6,6 +6,16 @@ struct SessionDetailView: View {
 
     @State private var appeared = false
     @State private var chartAnimated = false
+    @State private var selectedPoint: BpmDataPoint?
+
+    private var bpmData: [BpmDataPoint] {
+        if let stored = item.result.bpmReadings, !stored.isEmpty {
+            return stored.enumerated().map { idx, bpm in
+                BpmDataPoint(second: idx * 5, bpm: bpm)
+            }
+        }
+        return simulatedBpmData
+    }
 
     private var simulatedBpmData: [BpmDataPoint] {
         let duration = item.session.durationSeconds
@@ -23,12 +33,8 @@ struct SessionDetailView: View {
             let spike = (t > 0.4 && t < 0.7) ? (avg + (maxBpm - avg) * sin((t - 0.4) / 0.3 * .pi)) : warmup
             let noise = Double.random(in: -5...5)
             current = max(minBpm, min(maxBpm, spike + noise))
-
             let seconds = Int(t * Double(duration))
-            points.append(BpmDataPoint(
-                second: seconds,
-                bpm: current
-            ))
+            points.append(BpmDataPoint(second: seconds, bpm: current))
         }
         return points
     }
@@ -41,11 +47,8 @@ struct SessionDetailView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     headerSection
-
                     chartSection
-
                     statsGrid
-
                     zoneBreakdown
                 }
                 .padding(.bottom, 40)
@@ -103,13 +106,33 @@ struct SessionDetailView: View {
 
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("BPM TREND")
-                .font(.system(size: 11, weight: .black))
-                .foregroundStyle(MogboardTheme.mutedText)
-                .padding(.horizontal, 20)
+            HStack {
+                Text("BPM TREND")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(MogboardTheme.mutedText)
+
+                Spacer()
+
+                if let point = selectedPoint {
+                    HStack(spacing: 6) {
+                        Text("\(formatTime(point.second))")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(MogboardTheme.mutedText)
+                        Text("\(Int(point.bpm)) BPM")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundStyle(bpmColor(point.bpm))
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(MogboardTheme.surfaceElevated)
+                    .clipShape(.rect(cornerRadius: 6))
+                    .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, 20)
 
             VStack(spacing: 0) {
-                let data = simulatedBpmData
+                let data = bpmData
                 if !data.isEmpty {
                     Chart {
                         ForEach(data) { point in
@@ -125,6 +148,7 @@ struct SessionDetailView: View {
                                 )
                             )
                             .lineStyle(StrokeStyle(lineWidth: 2))
+                            .interpolationMethod(.catmullRom)
 
                             AreaMark(
                                 x: .value("Time", point.second),
@@ -137,6 +161,7 @@ struct SessionDetailView: View {
                                     endPoint: .bottom
                                 )
                             )
+                            .interpolationMethod(.catmullRom)
                         }
 
                         RuleMark(y: .value("Avg", item.result.avgBpm))
@@ -147,12 +172,25 @@ struct SessionDetailView: View {
                                     .font(.system(size: 8, weight: .black))
                                     .foregroundStyle(MogboardTheme.mutedText)
                             }
+
+                        if let point = selectedPoint {
+                            RuleMark(x: .value("Selected", point.second))
+                                .foregroundStyle(MogboardTheme.accent.opacity(0.5))
+                                .lineStyle(StrokeStyle(lineWidth: 1))
+
+                            PointMark(
+                                x: .value("Time", point.second),
+                                y: .value("BPM", point.bpm)
+                            )
+                            .foregroundStyle(bpmColor(point.bpm))
+                            .symbolSize(60)
+                        }
                     }
                     .chartXAxis {
                         AxisMarks(values: .automatic(desiredCount: 4)) { value in
                             AxisValueLabel {
                                 if let seconds = value.as(Int.self) {
-                                    Text("\(seconds / 60)m")
+                                    Text(formatTime(seconds))
                                         .font(.system(size: 9, weight: .bold))
                                         .foregroundStyle(MogboardTheme.mutedText)
                                 }
@@ -173,7 +211,31 @@ struct SessionDetailView: View {
                         }
                     }
                     .chartYScale(domain: Double(item.result.minBpm - 10)...Double(item.result.maxBpm + 10))
-                    .frame(height: 180)
+                    .chartOverlay { proxy in
+                        GeometryReader { geo in
+                            Rectangle()
+                                .fill(.clear)
+                                .contentShape(Rectangle())
+                                .gesture(
+                                    DragGesture(minimumDistance: 0)
+                                        .onChanged { drag in
+                                            let origin = geo[proxy.plotFrame!].origin
+                                            let x = drag.location.x - origin.x
+                                            if let second: Int = proxy.value(atX: x) {
+                                                withAnimation(.interactiveSpring) {
+                                                    selectedPoint = data.min(by: { abs($0.second - second) < abs($1.second - second) })
+                                                }
+                                            }
+                                        }
+                                        .onEnded { _ in
+                                            withAnimation(.easeOut(duration: 0.3)) {
+                                                selectedPoint = nil
+                                            }
+                                        }
+                                )
+                        }
+                    }
+                    .frame(height: 200)
                     .padding(16)
                 }
             }
@@ -220,12 +282,18 @@ struct SessionDetailView: View {
                 .padding(.horizontal, 20)
 
             VStack(spacing: 6) {
-                let avg = item.result.avgBpm
+                let data = bpmData
+                let total = max(1, data.count)
+                let peakCount = data.filter { $0.bpm >= 170 }.count
+                let cardioCount = data.filter { $0.bpm >= 140 && $0.bpm < 170 }.count
+                let fatBurnCount = data.filter { $0.bpm >= 110 && $0.bpm < 140 }.count
+                let warmupCount = data.filter { $0.bpm < 110 }.count
+
                 let zones: [(String, String, Color, Double)] = [
-                    ("PEAK", "170+", .red, avg >= 170 ? 0.3 : (avg >= 150 ? 0.15 : 0.05)),
-                    ("CARDIO", "140-170", .orange, avg >= 140 ? 0.4 : (avg >= 120 ? 0.25 : 0.1)),
-                    ("FAT BURN", "110-140", MogboardTheme.accent, avg >= 110 ? 0.35 : 0.3),
-                    ("WARM UP", "< 110", .blue, avg < 110 ? 0.4 : 0.15),
+                    ("PEAK", "170+", .red, Double(peakCount) / Double(total)),
+                    ("CARDIO", "140-170", .orange, Double(cardioCount) / Double(total)),
+                    ("FAT BURN", "110-140", MogboardTheme.accent, Double(fatBurnCount) / Double(total)),
+                    ("WARM UP", "< 110", .blue, Double(warmupCount) / Double(total)),
                 ]
 
                 ForEach(zones, id: \.0) { zone in
@@ -242,16 +310,16 @@ struct SessionDetailView: View {
 
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(zone.2.opacity(0.7))
-                                    .frame(width: chartAnimated ? geo.size.width * zone.3 : 0)
+                                    .frame(width: chartAnimated ? geo.size.width * max(0.02, zone.3) : 0)
                                     .animation(.spring(response: 0.6).delay(0.4), value: chartAnimated)
                             }
                         }
                         .frame(height: 8)
 
-                        Text(zone.1)
+                        Text("\(Int(zone.3 * 100))%")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(MogboardTheme.mutedText)
-                            .frame(width: 50, alignment: .trailing)
+                            .frame(width: 35, alignment: .trailing)
                     }
                 }
             }
@@ -273,9 +341,22 @@ struct SessionDetailView: View {
         .offset(y: appeared ? 0 : 15)
         .animation(.spring(response: 0.4).delay(0.2), value: appeared)
     }
+
+    private func formatTime(_ seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return "\(m):\(String(format: "%02d", s))"
+    }
+
+    private func bpmColor(_ bpm: Double) -> Color {
+        if bpm >= 170 { return .red }
+        if bpm >= 140 { return .orange }
+        if bpm >= 110 { return MogboardTheme.accent }
+        return .blue
+    }
 }
 
-struct BpmDataPoint: Identifiable {
+nonisolated struct BpmDataPoint: Identifiable, Sendable {
     let id = UUID()
     let second: Int
     let bpm: Double

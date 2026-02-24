@@ -22,6 +22,7 @@ class SessionViewModel {
     var sessionHistory: [SessionWithResult] = []
     var memberResults: [SessionResult] = []
     var filteredResults: [SessionResult] = []
+    var newPersonalRecords: [PersonalRecord] = []
 
     private let supabase = SupabaseService.shared
     private let healthKit = HealthKitService.shared
@@ -122,15 +123,32 @@ class SessionViewModel {
 
         do {
             try await supabase.completeSession(sessionId: session.id)
+            let sampledReadings = sampleBpmReadings()
             let result = try await supabase.submitSessionResult(
                 sessionId: session.id,
                 userId: userId,
                 avgBpm: avgBpm,
                 maxBpm: maxBpm,
                 minBpm: minBpm,
-                points: points
+                points: points,
+                bpmReadings: sampledReadings
             )
             lastResult = result
+
+            let previousResults = userResults
+            await fetchUserStats(userId: userId)
+            let allRecords = PersonalRecord.evaluate(results: userResults, previousResults: previousResults)
+            newPersonalRecords = allRecords.filter { $0.isNew }
+
+            for pr in newPersonalRecords {
+                try? await supabase.createFeedEvent(
+                    leagueId: leagueId,
+                    userId: userId,
+                    eventType: "personal_record",
+                    title: "New Personal Record!",
+                    description: "\(pr.name): \(pr.value) \(pr.unit)"
+                )
+            }
 
             try await supabase.createFeedEvent(
                 leagueId: leagueId,
@@ -241,6 +259,19 @@ class SessionViewModel {
         currentSession = nil
         currentBpm = 0
         sessionBpmReadings = []
+        newPersonalRecords = []
+    }
+
+    private func sampleBpmReadings() -> [Double] {
+        guard !sessionBpmReadings.isEmpty else { return [] }
+        let maxSamples = 120
+        if sessionBpmReadings.count <= maxSamples {
+            return sessionBpmReadings
+        }
+        let step = Double(sessionBpmReadings.count) / Double(maxSamples)
+        return (0..<maxSamples).map { i in
+            sessionBpmReadings[min(Int(Double(i) * step), sessionBpmReadings.count - 1)]
+        }
     }
 
     private func calculatePoints(avgBpm: Double, maxBpm: Int, minBpm: Int, duration: Int) -> Int {

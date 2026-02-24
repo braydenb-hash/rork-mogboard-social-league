@@ -5,6 +5,31 @@ struct FeedView: View {
     @Bindable var sessionViewModel: SessionViewModel
 
     @State private var appeared = false
+    @State private var selectedFilter: FeedFilter = .all
+
+    enum FeedFilter: String, CaseIterable {
+        case all = "ALL"
+        case sessions = "SESSIONS"
+        case spikes = "SPIKES"
+        case achievements = "BADGES"
+        case challenges = "CHALLENGES"
+
+        var eventTypes: [String] {
+            switch self {
+            case .all: []
+            case .sessions: ["session_complete"]
+            case .spikes: ["spike"]
+            case .achievements: ["achievement", "personal_record"]
+            case .challenges: ["challenge", "callout", "challenge_complete"]
+            }
+        }
+    }
+
+    private var filteredEvents: [FeedEvent] {
+        guard selectedFilter != .all else { return sessionViewModel.feedEvents }
+        let types = selectedFilter.eventTypes
+        return sessionViewModel.feedEvents.filter { types.contains($0.eventType) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -13,20 +38,23 @@ struct FeedView: View {
                     .ignoresSafeArea()
 
                 ScrollView {
-                    if sessionViewModel.feedEvents.isEmpty {
-                        emptyState
-                    } else {
-                        LazyVStack(spacing: 10) {
-                            ForEach(Array(sessionViewModel.feedEvents.enumerated()), id: \.element.id) { index, event in
-                                FeedCard(event: event)
-                                    .opacity(appeared ? 1 : 0)
-                                    .offset(y: appeared ? 0 : 20)
-                                    .animation(.spring(response: 0.4).delay(Double(index) * 0.04), value: appeared)
+                    VStack(spacing: 12) {
+                        filterChips
+
+                        if filteredEvents.isEmpty {
+                            emptyState
+                        } else {
+                            LazyVStack(spacing: 10) {
+                                ForEach(Array(filteredEvents.enumerated()), id: \.element.id) { index, event in
+                                    FeedCard(event: event)
+                                        .opacity(appeared ? 1 : 0)
+                                        .offset(y: appeared ? 0 : 20)
+                                        .animation(.spring(response: 0.4).delay(Double(index) * 0.04), value: appeared)
+                                }
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -61,19 +89,65 @@ struct FeedView: View {
         }
     }
 
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(FeedFilter.allCases, id: \.self) { filter in
+                    Button {
+                        withAnimation(.snappy) {
+                            selectedFilter = filter
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: filterIcon(filter))
+                                .font(.system(size: 10, weight: .bold))
+                            Text(filter.rawValue)
+                                .font(.system(size: 10, weight: .black))
+                        }
+                        .foregroundStyle(selectedFilter == filter ? .black : MogboardTheme.mutedText)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(selectedFilter == filter ? MogboardTheme.accent : MogboardTheme.cardBackground)
+                        .clipShape(.rect(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(selectedFilter == filter ? MogboardTheme.accent : MogboardTheme.cardBorder, lineWidth: 1)
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+        }
+        .contentMargins(.horizontal, 0)
+        .sensoryFeedback(.selection, trigger: selectedFilter)
+    }
+
+    private func filterIcon(_ filter: FeedFilter) -> String {
+        switch filter {
+        case .all: "line.3.horizontal.decrease"
+        case .sessions: "checkmark.circle.fill"
+        case .spikes: "bolt.heart.fill"
+        case .achievements: "star.fill"
+        case .challenges: "figure.boxing"
+        }
+    }
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             Spacer().frame(height: 80)
 
-            Image(systemName: "bolt.fill")
+            Image(systemName: selectedFilter == .all ? "bolt.fill" : filterIcon(selectedFilter))
                 .font(.system(size: 48))
                 .foregroundStyle(MogboardTheme.accent.opacity(0.3))
 
-            Text("NO ACTIVITY YET")
+            Text(selectedFilter == .all ? "NO ACTIVITY YET" : "NO \(selectedFilter.rawValue) YET")
                 .font(.system(size: 28, weight: .black, design: .default).width(.compressed))
                 .foregroundStyle(.white)
 
-            Text("Heart rate spikes, callouts, and\nmog moments will show up here")
+            Text(selectedFilter == .all
+                ? "Heart rate spikes, callouts, and\nmog moments will show up here"
+                : "Nothing to show for this filter yet.\nKeep grinding!")
                 .font(.subheadline)
                 .foregroundStyle(MogboardTheme.mutedText)
                 .multilineTextAlignment(.center)
@@ -203,6 +277,8 @@ struct FeedCard: View {
         case "achievement": "star.fill"
         case "callout": "megaphone.fill"
         case "challenge": "figure.boxing"
+        case "personal_record": "medal.fill"
+        case "challenge_complete": "trophy.fill"
         default: "circle.fill"
         }
     }
@@ -215,6 +291,8 @@ struct FeedCard: View {
         case "achievement": .orange
         case "callout": .purple
         case "challenge": .cyan
+        case "personal_record": .yellow
+        case "challenge_complete": .green
         default: MogboardTheme.mutedText
         }
     }

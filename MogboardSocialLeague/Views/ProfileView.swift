@@ -10,6 +10,7 @@ struct ProfileView: View {
     @State private var showLeagueSettings = false
     @State private var showAchievements = false
     @State private var showCustomization = false
+    @State private var showChallenge = false
     @State private var appeared = false
     @State private var profilePrefs = ProfilePreferences.load()
 
@@ -29,9 +30,11 @@ struct ProfileView: View {
 
                         bpmTrendChart
 
+                        weeklyChallengeBanner
+
                         achievementsPreview
 
-                        personalBests
+                        personalRecordsSection
 
                         infoCards
 
@@ -112,6 +115,9 @@ struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showCustomization) {
                 ProfileCustomizationView(authViewModel: authViewModel)
+            }
+            .navigationDestination(isPresented: $showChallenge) {
+                ChallengeView(authViewModel: authViewModel, sessionViewModel: sessionViewModel)
             }
             .onChange(of: showCustomization) { _, newValue in
                 if !newValue {
@@ -533,63 +539,179 @@ struct ProfileView: View {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
-    private var personalBests: some View {
+    private var weeklyChallengeBanner: some View {
+        let challenge = Challenge.weeklyChallenge()
+
+        return Button {
+            showChallenge = true
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(challengeBannerColor(challenge).opacity(0.12))
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(challengeBannerColor(challenge).opacity(0.3), lineWidth: 1.5)
+                        )
+                    Image(systemName: challenge.icon)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(challengeBannerColor(challenge))
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("WEEKLY CHALLENGE")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundStyle(challengeBannerColor(challenge))
+                        Text("\(challenge.daysRemaining)d LEFT")
+                            .font(.system(size: 8, weight: .black))
+                            .foregroundStyle(challenge.daysRemaining <= 1 ? .red : MogboardTheme.mutedText)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background((challenge.daysRemaining <= 1 ? Color.red : MogboardTheme.cardBorder).opacity(0.3))
+                            .clipShape(.rect(cornerRadius: 4))
+                    }
+                    Text(challenge.name)
+                        .font(.system(size: 13, weight: .black))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(MogboardTheme.mutedText)
+            }
+            .padding(14)
+            .background(MogboardTheme.cardBackground)
+            .clipShape(.rect(cornerRadius: MogboardTheme.cardCornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: MogboardTheme.cardCornerRadius)
+                    .stroke(challengeBannerColor(challenge).opacity(0.2), lineWidth: 1.5)
+            )
+            .background(
+                RoundedRectangle(cornerRadius: MogboardTheme.cardCornerRadius)
+                    .fill(.black)
+                    .offset(x: 3, y: MogboardTheme.cardShadowOffset)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 15)
+        .animation(.spring(response: 0.4).delay(0.12), value: appeared)
+    }
+
+    private func challengeBannerColor(_ challenge: Challenge) -> Color {
+        switch challenge.type {
+        case .mostSessions: .orange
+        case .highestPoints: MogboardTheme.accent
+        case .bestSingleSession: .red
+        case .streakDays: .cyan
+        case .totalBpm: .purple
+        }
+    }
+
+    private var personalRecordsSection: some View {
         Group {
-            if let best = bestSession {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("PERSONAL BESTS")
+            let records = PersonalRecord.evaluate(results: sessionViewModel.userResults)
+            if !records.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("PERSONAL RECORDS")
                         .font(.system(size: 11, weight: .black))
                         .foregroundStyle(MogboardTheme.mutedText)
                         .padding(.horizontal, 20)
 
-                    HStack(spacing: 10) {
-                        MogCard {
-                            VStack(spacing: 4) {
-                                Image(systemName: "flame.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.orange)
-                                Text("\(best.points)")
-                                    .font(.system(.headline, design: .monospaced, weight: .black))
-                                    .foregroundStyle(MogboardTheme.accent)
-                                Text("BEST PTS")
-                                    .font(.system(size: 8, weight: .black))
-                                    .foregroundStyle(MogboardTheme.mutedText)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        ForEach(records.prefix(3)) { record in
+                            VStack(spacing: 6) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(record.isNew ? MogboardTheme.accent.opacity(0.12) : MogboardTheme.cardBackground)
+                                        .frame(width: 44, height: 44)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(record.isNew ? MogboardTheme.accent.opacity(0.4) : MogboardTheme.cardBorder, lineWidth: record.isNew ? 2 : 1)
+                                        )
 
-                        MogCard {
-                            VStack(spacing: 4) {
-                                Image(systemName: "bolt.heart.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.red)
-                                Text("\(highestMaxBpm)")
-                                    .font(.system(.headline, design: .monospaced, weight: .black))
-                                    .foregroundStyle(.white)
-                                Text("PEAK BPM")
-                                    .font(.system(size: 8, weight: .black))
-                                    .foregroundStyle(MogboardTheme.mutedText)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                                    Image(systemName: record.icon)
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundStyle(record.isNew ? MogboardTheme.accent : MogboardTheme.mutedText)
+                                }
 
-                        MogCard {
-                            VStack(spacing: 4) {
-                                Image(systemName: "chart.line.uptrend.xyaxis")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.cyan)
-                                Text("\(highestAvgBpm)")
-                                    .font(.system(.headline, design: .monospaced, weight: .black))
-                                    .foregroundStyle(.white)
-                                Text("BEST AVG")
-                                    .font(.system(size: 8, weight: .black))
-                                    .foregroundStyle(MogboardTheme.mutedText)
+                                VStack(spacing: 2) {
+                                    HStack(spacing: 2) {
+                                        Text("\(record.value)")
+                                            .font(.system(.subheadline, design: .monospaced, weight: .black))
+                                            .foregroundStyle(.white)
+                                        if !record.unit.isEmpty {
+                                            Text(record.unit)
+                                                .font(.system(size: 8, weight: .bold))
+                                                .foregroundStyle(MogboardTheme.mutedText)
+                                        }
+                                    }
+
+                                    Text(record.name)
+                                        .font(.system(size: 7, weight: .black))
+                                        .foregroundStyle(MogboardTheme.mutedText)
+                                        .lineLimit(1)
+                                }
+
+                                if record.isNew {
+                                    Text("NEW PR!")
+                                        .font(.system(size: 7, weight: .black))
+                                        .foregroundStyle(.black)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(MogboardTheme.accent)
+                                        .clipShape(.rect(cornerRadius: 4))
+                                }
                             }
+                            .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
+                            .background(MogboardTheme.cardBackground)
+                            .clipShape(.rect(cornerRadius: MogboardTheme.cardCornerRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: MogboardTheme.cardCornerRadius)
+                                    .stroke(record.isNew ? MogboardTheme.accent.opacity(0.3) : MogboardTheme.cardBorder, lineWidth: 1)
+                            )
                         }
                     }
                     .padding(.horizontal, 20)
+
+                    if records.count > 3 {
+                        HStack(spacing: 10) {
+                            ForEach(records.dropFirst(3)) { record in
+                                MogCard {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: record.icon)
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundStyle(MogboardTheme.mutedText)
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            Text(record.name)
+                                                .font(.system(size: 8, weight: .black))
+                                                .foregroundStyle(MogboardTheme.mutedText)
+                                            HStack(spacing: 2) {
+                                                Text("\(record.value)")
+                                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                                    .foregroundStyle(.white)
+                                                Text(record.unit)
+                                                    .font(.system(size: 8, weight: .bold))
+                                                    .foregroundStyle(MogboardTheme.mutedText)
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
                 }
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 15)
+                .animation(.spring(response: 0.4).delay(0.22), value: appeared)
             }
         }
     }

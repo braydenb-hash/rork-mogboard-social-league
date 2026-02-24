@@ -9,6 +9,7 @@ nonisolated struct SessionResult: Codable, Identifiable, Sendable {
     var minBpm: Int
     var points: Int
     var completedAt: Date?
+    var bpmReadings: [Double]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -19,5 +20,6 @@ nonisolated struct SessionResult: Codable, Identifiable, Sendable {
         case minBpm = "min_bpm"
         case points
         case completedAt = "completed_at"
+        case bpmReadings = "bpm_readings"
     }
 }

@@ -255,6 +255,55 @@ struct ActiveSessionView: View {
                     .animation(.spring(response: 0.4).delay(0.2), value: completionAppeared)
                 }
 
+                if !sessionViewModel.newPersonalRecords.isEmpty {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "medal.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.yellow)
+                                .symbolEffect(.bounce, value: completionAppeared)
+                            Text("NEW PERSONAL RECORDS!")
+                                .font(.system(size: 12, weight: .black))
+                                .foregroundStyle(.yellow)
+                        }
+
+                        ForEach(sessionViewModel.newPersonalRecords) { pr in
+                            HStack(spacing: 10) {
+                                Image(systemName: pr.icon)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(.yellow.opacity(0.7))
+                                    .frame(width: 24)
+                                Text(pr.name)
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundStyle(MogboardTheme.mutedText)
+                                Spacer()
+                                HStack(spacing: 3) {
+                                    Text("\(pr.value)")
+                                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                                        .foregroundStyle(.yellow)
+                                    if !pr.unit.isEmpty {
+                                        Text(pr.unit)
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundStyle(.yellow.opacity(0.6))
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color.yellow.opacity(0.06))
+                            .clipShape(.rect(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.yellow.opacity(0.15), lineWidth: 1)
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .opacity(completionAppeared ? 1 : 0)
+                    .offset(y: completionAppeared ? 0 : 15)
+                    .animation(.spring(response: 0.4).delay(0.28), value: completionAppeared)
+                }
+
                 HStack(spacing: 10) {
                     Button {
                         showShareSheet = true

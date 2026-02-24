@@ -172,7 +172,7 @@ class SupabaseService {
             .execute()
     }
 
-    func submitSessionResult(sessionId: UUID, userId: UUID, avgBpm: Double, maxBpm: Int, minBpm: Int, points: Int) async throws -> SessionResult {
+    func submitSessionResult(sessionId: UUID, userId: UUID, avgBpm: Double, maxBpm: Int, minBpm: Int, points: Int, bpmReadings: [Double]? = nil) async throws -> SessionResult {
         let result = SessionResult(
             id: UUID(),
             sessionId: sessionId,
@@ -181,7 +181,8 @@ class SupabaseService {
             maxBpm: maxBpm,
             minBpm: minBpm,
             points: points,
-            completedAt: nil
+            completedAt: nil,
+            bpmReadings: bpmReadings
         )
         try await client.from("session_results")
             .insert(result)
