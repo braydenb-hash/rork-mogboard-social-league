@@ -42,6 +42,7 @@ struct ActiveSessionView: View {
             Text("You'll lose all progress from this session.")
         }
         .sensoryFeedback(.success, trigger: sessionViewModel.sessionComplete)
+        .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: completionAppeared)
         .sheet(isPresented: $showShareSheet) {
             if let result = sessionViewModel.lastResult {
                 ShareCardSheet(
@@ -357,10 +358,11 @@ struct ActiveSessionView: View {
             .padding(.bottom, 40)
         }
         .onAppear {
-            withAnimation {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
                 completionAppeared = true
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            Task {
+                try? await Task.sleep(for: .seconds(0.3))
                 showConfetti = true
             }
         }

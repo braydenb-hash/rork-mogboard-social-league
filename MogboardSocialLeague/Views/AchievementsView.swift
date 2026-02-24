@@ -5,6 +5,8 @@ struct AchievementsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var appeared = false
+    @State private var showConfetti = false
+    @State private var celebratedAchievement: Achievement?
 
     private var unlockedCount: Int {
         achievements.filter(\.isUnlocked).count
@@ -30,6 +32,13 @@ struct AchievementsView: View {
                 }
                 .padding(.bottom, 40)
             }
+
+            ConfettiView(
+                colors: confettiColors,
+                isActive: $showConfetti
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -47,6 +56,15 @@ struct AchievementsView: View {
                 appeared = true
             }
         }
+        .sensoryFeedback(.success, trigger: showConfetti)
+    }
+
+    private var confettiColors: [Color] {
+        if let achievement = celebratedAchievement {
+            let base = badgeColor(achievement.tier)
+            return [base, base.opacity(0.7), .white, .yellow, base.opacity(0.5)]
+        }
+        return [MogboardTheme.accent, .yellow, .white, .orange, MogboardTheme.accent.opacity(0.5)]
     }
 
     private var progressHeader: some View {
@@ -99,10 +117,13 @@ struct AchievementsView: View {
 
             LazyVStack(spacing: 8) {
                 ForEach(Array(achievements.enumerated()), id: \.element.id) { index, achievement in
-                    AchievementCard(achievement: achievement)
-                        .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : 15)
-                        .animation(.spring(response: 0.4).delay(Double(index) * 0.05), value: appeared)
+                    AchievementCard(achievement: achievement) {
+                        celebratedAchievement = achievement
+                        showConfetti = true
+                    }
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 15)
+                    .animation(.spring(response: 0.4).delay(Double(index) * 0.05), value: appeared)
                 }
             }
             .padding(.horizontal, 20)
@@ -110,6 +131,10 @@ struct AchievementsView: View {
     }
 
     private func tierColor(_ tier: Achievement.Tier) -> Color {
+        badgeColor(tier)
+    }
+
+    private func badgeColor(_ tier: Achievement.Tier) -> Color {
         switch tier {
         case .bronze: Color(red: 0.8, green: 0.5, blue: 0.2)
         case .silver: Color(red: 0.7, green: 0.7, blue: 0.75)
@@ -121,6 +146,10 @@ struct AchievementsView: View {
 
 struct AchievementCard: View {
     let achievement: Achievement
+    var onCelebrate: (() -> Void)?
+
+    @State private var justUnlocked = false
+    @State private var celebrateTrigger = 0
 
     var body: some View {
         HStack(spacing: 14) {
@@ -136,6 +165,7 @@ struct AchievementCard: View {
                 Image(systemName: achievement.icon)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(achievement.isUnlocked ? badgeColor : MogboardTheme.mutedText.opacity(0.4))
+                    .symbolEffect(.bounce, value: celebrateTrigger)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -151,9 +181,14 @@ struct AchievementCard: View {
             Spacer()
 
             if achievement.isUnlocked {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 18))
-                    .foregroundStyle(badgeColor)
+                Button {
+                    celebrateTrigger += 1
+                    onCelebrate?()
+                } label: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(badgeColor)
+                }
             } else {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 14))

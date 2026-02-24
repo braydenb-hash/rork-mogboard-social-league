@@ -5,9 +5,9 @@ struct RosterView: View {
     @Bindable var sessionViewModel: SessionViewModel
 
     @State private var viewModel = LeagueViewModel()
-    @State private var showStartSession = false
     @State private var selectedMember: LeagueMemberWithUser?
     @State private var appeared = false
+    @State private var codeCopied = false
 
     var body: some View {
         NavigationStack {
@@ -32,11 +32,16 @@ struct RosterView: View {
 
                                 Button {
                                     UIPasteboard.general.string = league.inviteCode
+                                    codeCopied = true
+                                    Task {
+                                        try? await Task.sleep(for: .seconds(2))
+                                        codeCopied = false
+                                    }
                                 } label: {
                                     VStack(alignment: .trailing, spacing: 2) {
-                                        Text("CODE")
+                                        Text(codeCopied ? "COPIED!" : "CODE")
                                             .font(.system(size: 10, weight: .bold))
-                                            .foregroundStyle(MogboardTheme.mutedText)
+                                            .foregroundStyle(codeCopied ? MogboardTheme.accent : MogboardTheme.mutedText)
                                         Text(league.inviteCode)
                                             .font(.system(.caption, design: .monospaced, weight: .bold))
                                             .foregroundStyle(MogboardTheme.accent)
@@ -47,38 +52,14 @@ struct RosterView: View {
                                     .clipShape(.rect(cornerRadius: 8))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .stroke(MogboardTheme.cardBorder, lineWidth: 1)
+                                            .stroke(codeCopied ? MogboardTheme.accent.opacity(0.4) : MogboardTheme.cardBorder, lineWidth: 1)
                                     )
                                 }
-                                .sensoryFeedback(.success, trigger: league.inviteCode)
+                                .sensoryFeedback(.success, trigger: codeCopied)
                             }
                             .padding(.horizontal, 20)
                             .padding(.top, 8)
                         }
-
-                        Button {
-                            showStartSession = true
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "bolt.heart.fill")
-                                    .font(.title3)
-                                    .symbolEffect(.pulse, options: .repeating)
-                                Text("START MOG SESSION")
-                                    .font(.system(.subheadline, weight: .black))
-                            }
-                            .foregroundStyle(.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(MogboardTheme.accent)
-                            .clipShape(.rect(cornerRadius: 12))
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(.black)
-                                    .offset(x: 3, y: 4)
-                            )
-                        }
-                        .padding(.horizontal, 20)
-                        .sensoryFeedback(.impact(weight: .medium), trigger: showStartSession)
 
                         if viewModel.isLoading && viewModel.members.isEmpty {
                             VStack(spacing: 10) {
@@ -111,7 +92,8 @@ struct RosterView: View {
                                         RosterMemberCard(
                                             member: member,
                                             rank: index + 1,
-                                            leaderboardEntry: entryForUser(member.userId)
+                                            leaderboardEntry: entryForUser(member.userId),
+                                            streak: memberStreak(member.userId)
                                         )
                                     }
                                     .buttonStyle(.plain)
@@ -137,7 +119,7 @@ struct RosterView: View {
                             .padding(.horizontal, 20)
                         }
                     }
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 80)
                 }
             }
             .navigationTitle("")
@@ -170,20 +152,6 @@ struct RosterView: View {
                     appeared = true
                 }
             }
-            .fullScreenCover(isPresented: $showStartSession) {
-                NavigationStack {
-                    if sessionViewModel.isSessionActive || sessionViewModel.sessionComplete {
-                        ActiveSessionView(authViewModel: authViewModel, sessionViewModel: sessionViewModel)
-                    } else {
-                        StartSessionView(authViewModel: authViewModel, sessionViewModel: sessionViewModel)
-                    }
-                }
-            }
-            .onChange(of: sessionViewModel.isSessionActive) { _, newValue in
-                if !newValue && !sessionViewModel.sessionComplete {
-                    showStartSession = false
-                }
-            }
             .navigationDestination(item: $selectedMember) { member in
                 MemberDetailView(
                     member: member,
@@ -197,29 +165,80 @@ struct RosterView: View {
     private func entryForUser(_ userId: UUID) -> LeaderboardEntry? {
         sessionViewModel.leaderboardEntries.first { $0.id == userId }
     }
+
+    private func memberStreak(_ userId: UUID) -> Int {
+        guard userId == authViewModel.currentUser?.id else { return 0 }
+        guard !sessionViewModel.sessionHistory.isEmpty else { return 0 }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+
+        let sessionDays = Set(sessionViewModel.sessionHistory.compactMap { item -> Date? in
+            guard let date = item.result.completedAt else { return nil }
+            return calendar.startOfDay(for: date)
+        })
+
+        var checkDate: Date
+        if sessionDays.contains(today) {
+            checkDate = today
+        } else if sessionDays.contains(yesterday) {
+            checkDate = yesterday
+        } else {
+            return 0
+        }
+
+        var count = 0
+        while sessionDays.contains(checkDate) {
+            count += 1
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prev
+        }
+        return count
+    }
 }
 
 struct RosterMemberCard: View {
     let member: LeagueMemberWithUser
     let rank: Int
     let leaderboardEntry: LeaderboardEntry?
+    var streak: Int = 0
 
     var body: some View {
         MogCard {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(MogboardTheme.accent.opacity(0.12))
+                        .fill(rankColor.opacity(0.12))
                         .frame(width: 44, height: 44)
+                        .overlay(
+                            Circle()
+                                .stroke(rankColor.opacity(rank <= 3 ? 0.4 : 0), lineWidth: 1.5)
+                        )
                     Text("\(rank)")
                         .font(.system(.headline, design: .monospaced, weight: .black))
-                        .foregroundStyle(MogboardTheme.accent)
+                        .foregroundStyle(rankColor)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(member.users?.displayName.uppercased() ?? "UNKNOWN")
-                        .font(.system(.body, weight: .bold))
-                        .foregroundStyle(MogboardTheme.accent)
+                    HStack(spacing: 6) {
+                        Text(member.users?.displayName.uppercased() ?? "UNKNOWN")
+                            .font(.system(.body, weight: .bold))
+                            .foregroundStyle(rankColor)
+
+                        if streak >= 3 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "flame.fill")
+                                    .font(.system(size: 8))
+                                Text("\(streak)")
+                                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                            }
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.12))
+                            .clipShape(.rect(cornerRadius: 4))
+                        }
+                    }
 
                     HStack(spacing: 8) {
                         Text(member.users?.currentTitle ?? "Unranked")
@@ -259,6 +278,15 @@ struct RosterMemberCard: View {
                         .foregroundStyle(MogboardTheme.mutedText)
                 }
             }
+        }
+    }
+
+    private var rankColor: Color {
+        switch rank {
+        case 1: Color(red: 1.0, green: 0.84, blue: 0.0)
+        case 2: Color(red: 0.7, green: 0.7, blue: 0.75)
+        case 3: Color(red: 0.8, green: 0.5, blue: 0.2)
+        default: MogboardTheme.accent
         }
     }
 }
