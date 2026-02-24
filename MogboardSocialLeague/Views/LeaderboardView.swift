@@ -6,6 +6,8 @@ struct LeaderboardView: View {
 
     @State private var appeared = false
     @State private var selectedFilter: LeaderboardFilter = .allTime
+    @State private var viewModel = LeagueViewModel()
+    @State private var selectedMember: LeagueMemberWithUser?
 
     enum LeaderboardFilter: String, CaseIterable {
         case weekly = "WEEK"
@@ -55,6 +57,36 @@ struct LeaderboardView: View {
             .sorted { $0.totalPoints > $1.totalPoints }
     }
 
+    private func memberForEntry(_ entry: LeaderboardEntry) -> LeagueMemberWithUser? {
+        viewModel.members.first { $0.userId == entry.id }
+    }
+
+    private func rankChange(for entry: LeaderboardEntry) -> Int? {
+        let calendar = Calendar.current
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date())!
+
+        let oldResults = sessionViewModel.filteredResults.filter { result in
+            guard let completedAt = result.completedAt else { return false }
+            return completedAt < weekAgo
+        }
+
+        guard !oldResults.isEmpty else { return nil }
+
+        var oldPoints: [UUID: Int] = [:]
+        for result in oldResults {
+            oldPoints[result.userId, default: 0] += result.points
+        }
+
+        let oldSorted = oldPoints.sorted { $0.value > $1.value }.map(\.key)
+        let currentSorted = sessionViewModel.leaderboardEntries.map(\.id)
+
+        guard let oldRank = oldSorted.firstIndex(of: entry.id),
+              let currentRank = currentSorted.firstIndex(of: entry.id) else { return nil }
+
+        let change = oldRank - currentRank
+        return change != 0 ? change : nil
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -65,14 +97,22 @@ struct LeaderboardView: View {
                     VStack(spacing: 16) {
                         filterPicker
 
-                        if filteredEntries.isEmpty {
+                        if sessionViewModel.leaderboardEntries.isEmpty && sessionViewModel.isLoading {
+                            VStack(spacing: 10) {
+                                SkeletonStatRow()
+                                ForEach(0..<3, id: \.self) { _ in
+                                    SkeletonCard()
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                        } else if filteredEntries.isEmpty {
                             emptyState
                         } else {
                             podiumSection
                             remainingEntries
                         }
                     }
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 80)
                 }
             }
             .navigationTitle("")
@@ -89,6 +129,7 @@ struct LeaderboardView: View {
             .task {
                 if let leagueId = authViewModel.currentLeague?.id {
                     await sessionViewModel.fetchLeaderboard(leagueId: leagueId)
+                    await viewModel.fetchMembers(leagueId: leagueId)
                 }
                 withAnimation(.spring(response: 0.5)) {
                     appeared = true
@@ -98,10 +139,18 @@ struct LeaderboardView: View {
                 appeared = false
                 if let leagueId = authViewModel.currentLeague?.id {
                     await sessionViewModel.fetchLeaderboard(leagueId: leagueId)
+                    await viewModel.fetchMembers(leagueId: leagueId)
                 }
                 withAnimation(.spring(response: 0.5)) {
                     appeared = true
                 }
+            }
+            .navigationDestination(item: $selectedMember) { member in
+                MemberDetailView(
+                    member: member,
+                    leagueId: authViewModel.currentLeague?.id ?? UUID(),
+                    sessionViewModel: sessionViewModel
+                )
             }
         }
     }
@@ -185,79 +234,117 @@ struct LeaderboardView: View {
     }
 
     private func podiumCard(entry: LeaderboardEntry, rank: Int, height: CGFloat) -> some View {
-        VStack(spacing: 6) {
-            if rank == 1 {
-                Image(systemName: "crown.fill")
-                    .font(.title3)
+        Button {
+            selectedMember = memberForEntry(entry)
+        } label: {
+            VStack(spacing: 6) {
+                if rank == 1 {
+                    Image(systemName: "crown.fill")
+                        .font(.title3)
+                        .foregroundStyle(MogboardTheme.accent)
+                        .symbolEffect(.bounce, value: appeared)
+                }
+
+                ZStack {
+                    Circle()
+                        .fill(rank == 1 ? MogboardTheme.accent.opacity(0.15) : MogboardTheme.cardBackground)
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            Circle()
+                                .stroke(rank == 1 ? MogboardTheme.accent : MogboardTheme.cardBorder, lineWidth: 2)
+                        )
+
+                    Text(initials(for: entry.user.displayName))
+                        .font(.system(.headline, weight: .black))
+                        .foregroundStyle(rank == 1 ? MogboardTheme.accent : .white)
+                }
+
+                Text(entry.user.displayName.split(separator: " ").first.map(String.init) ?? "?")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                Text("\(entry.totalPoints)")
+                    .font(.system(.title3, design: .monospaced, weight: .black))
                     .foregroundStyle(MogboardTheme.accent)
-                    .symbolEffect(.bounce, value: appeared)
+                    .contentTransition(.numericText())
+
+                Text("PTS")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(MogboardTheme.mutedText)
+
+                if let change = rankChange(for: entry) {
+                    rankBadge(change)
+                }
             }
-
-            ZStack {
-                Circle()
-                    .fill(rank == 1 ? MogboardTheme.accent.opacity(0.15) : MogboardTheme.cardBackground)
-                    .frame(width: 48, height: 48)
-                    .overlay(
-                        Circle()
-                            .stroke(rank == 1 ? MogboardTheme.accent : MogboardTheme.cardBorder, lineWidth: 2)
-                    )
-
-                Text(initials(for: entry.user.displayName))
-                    .font(.system(.headline, weight: .black))
-                    .foregroundStyle(rank == 1 ? MogboardTheme.accent : .white)
-            }
-
-            Text(entry.user.displayName.split(separator: " ").first.map(String.init) ?? "?")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-
-            Text("\(entry.totalPoints)")
-                .font(.system(.title3, design: .monospaced, weight: .black))
-                .foregroundStyle(MogboardTheme.accent)
-                .contentTransition(.numericText())
-
-            Text("PTS")
-                .font(.system(size: 9, weight: .black))
-                .foregroundStyle(MogboardTheme.mutedText)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .padding(.vertical, 12)
+            .background(MogboardTheme.cardBackground)
+            .clipShape(.rect(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(rank == 1 ? MogboardTheme.accent.opacity(0.4) : MogboardTheme.cardBorder, lineWidth: rank == 1 ? 2 : 1)
+            )
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: height)
-        .padding(.vertical, 12)
-        .background(MogboardTheme.cardBackground)
-        .clipShape(.rect(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(rank == 1 ? MogboardTheme.accent.opacity(0.4) : MogboardTheme.cardBorder, lineWidth: rank == 1 ? 2 : 1)
-        )
+        .buttonStyle(.plain)
+    }
+
+    private func rankBadge(_ change: Int) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: change > 0 ? "arrow.up" : "arrow.down")
+                .font(.system(size: 7, weight: .black))
+            Text("\(abs(change))")
+                .font(.system(size: 8, weight: .black, design: .monospaced))
+        }
+        .foregroundStyle(change > 0 ? MogboardTheme.accent : .red)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 2)
+        .background((change > 0 ? MogboardTheme.accent : Color.red).opacity(0.12))
+        .clipShape(.rect(cornerRadius: 4))
     }
 
     private var remainingEntries: some View {
         LazyVStack(spacing: 8) {
             ForEach(Array(filteredEntries.dropFirst(3).enumerated()), id: \.element.id) { index, entry in
-                MogCard {
-                    HStack(spacing: 14) {
-                        Text("#\(index + 4)")
-                            .font(.system(.headline, design: .monospaced, weight: .black))
-                            .foregroundStyle(MogboardTheme.mutedText)
-                            .frame(width: 36, alignment: .leading)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(entry.user.displayName.uppercased())
-                                .font(.system(.subheadline, weight: .bold))
-                                .foregroundStyle(.white)
-                            Text("\(entry.sessionsPlayed) sessions · \(Int(entry.avgBpm)) avg BPM")
-                                .font(.caption2.weight(.semibold))
+                Button {
+                    selectedMember = memberForEntry(entry)
+                } label: {
+                    MogCard {
+                        HStack(spacing: 14) {
+                            Text("#\(index + 4)")
+                                .font(.system(.headline, design: .monospaced, weight: .black))
                                 .foregroundStyle(MogboardTheme.mutedText)
+                                .frame(width: 36, alignment: .leading)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.user.displayName.uppercased())
+                                    .font(.system(.subheadline, weight: .bold))
+                                    .foregroundStyle(.white)
+                                Text("\(entry.sessionsPlayed) sessions · \(Int(entry.avgBpm)) avg BPM")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(MogboardTheme.mutedText)
+                            }
+
+                            Spacer()
+
+                            HStack(spacing: 8) {
+                                if let change = rankChange(for: entry) {
+                                    rankBadge(change)
+                                }
+
+                                Text("\(entry.totalPoints)")
+                                    .font(.system(.title3, design: .monospaced, weight: .black))
+                                    .foregroundStyle(MogboardTheme.accent)
+
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(MogboardTheme.mutedText)
+                            }
                         }
-
-                        Spacer()
-
-                        Text("\(entry.totalPoints)")
-                            .font(.system(.title3, design: .monospaced, weight: .black))
-                            .foregroundStyle(MogboardTheme.accent)
                     }
                 }
+                .buttonStyle(.plain)
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 15)
                 .animation(.spring(response: 0.4).delay(0.25 + Double(index) * 0.04), value: appeared)

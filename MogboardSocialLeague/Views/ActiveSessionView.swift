@@ -10,6 +10,7 @@ struct ActiveSessionView: View {
     @State private var completionAppeared = false
     @State private var showShareSheet = false
     @State private var showConfetti = false
+    @State private var showTitleUpgrade = false
 
     var body: some View {
         ZStack {
@@ -29,6 +30,16 @@ struct ActiveSessionView: View {
                 isActive: $showConfetti
             )
             .ignoresSafeArea()
+
+            if showTitleUpgrade, let oldTitle = sessionViewModel.previousTitle, let newTitle = sessionViewModel.newTitle {
+                TitleUpgradeView(oldTitle: oldTitle, newTitle: newTitle) {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        showTitleUpgrade = false
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(10)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -364,6 +375,14 @@ struct ActiveSessionView: View {
             Task {
                 try? await Task.sleep(for: .seconds(0.3))
                 showConfetti = true
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                if sessionViewModel.titleUpgraded {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        showTitleUpgrade = true
+                    }
+                }
             }
         }
     }

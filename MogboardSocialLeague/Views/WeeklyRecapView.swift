@@ -6,6 +6,7 @@ struct WeeklyRecapView: View {
     let authViewModel: AuthViewModel
 
     @State private var appeared = false
+    @State private var showShare = false
 
     private var thisWeekSessions: [SessionWithResult] {
         let calendar = Calendar.current
@@ -58,6 +59,19 @@ struct WeeklyRecapView: View {
         }
     }
 
+    private var recapShareText: String {
+        var text = "My Mogboard Weekly Recap\n"
+        text += dateRangeText + "\n\n"
+        text += "\(thisWeekSessions.count) sessions completed\n"
+        text += "\(totalPoints) total points"
+        if pointsDelta != 0 {
+            text += " (\(pointsDelta > 0 ? "+" : "")\(pointsDelta) vs last week)"
+        }
+        text += "\n\(avgBpm) avg BPM · \(peakBpm) peak BPM"
+        text += "\n\nMog or get mogged."
+        return text
+    }
+
     var body: some View {
         ZStack {
             MogboardTheme.background
@@ -69,6 +83,7 @@ struct WeeklyRecapView: View {
                     bigNumbersSection
                     activityChart
                     deltaSection
+                    shareSection
                 }
                 .padding(.bottom, 40)
             }
@@ -268,6 +283,124 @@ struct WeeklyRecapView: View {
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 15)
         .animation(.spring(response: 0.4).delay(0.15), value: appeared)
+    }
+
+    private var shareSection: some View {
+        VStack(spacing: 12) {
+            recapShareCard
+
+            ShareLink(item: recapShareText) {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("SHARE RECAP")
+                        .font(.system(.headline, weight: .black))
+                }
+                .foregroundStyle(.black)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(MogboardTheme.accent)
+                .clipShape(.rect(cornerRadius: 12))
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.black)
+                        .offset(x: 3, y: 4)
+                )
+            }
+            .padding(.horizontal, 20)
+        }
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 15)
+        .animation(.spring(response: 0.4).delay(0.2), value: appeared)
+    }
+
+    private var recapShareCard: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "bolt.heart.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(MogboardTheme.accent)
+                    Text("MOGBOARD")
+                        .font(.system(size: 11, weight: .black))
+                        .foregroundStyle(MogboardTheme.accent)
+                    Spacer()
+                    Text("WEEKLY RECAP")
+                        .font(.system(size: 9, weight: .black))
+                        .foregroundStyle(MogboardTheme.mutedText)
+                }
+
+                Text(dateRangeText.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(MogboardTheme.mutedText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(totalPoints)")
+                            .font(.system(size: 48, weight: .black, design: .monospaced))
+                            .foregroundStyle(MogboardTheme.accent)
+                        Text("TOTAL POINTS")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(MogboardTheme.mutedText)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 10) {
+                        HStack(spacing: 16) {
+                            ShareStatBlock(label: "SESSIONS", value: "\(thisWeekSessions.count)")
+                            ShareStatBlock(label: "AVG BPM", value: "\(avgBpm)")
+                            ShareStatBlock(label: "PEAK", value: "\(peakBpm)")
+                        }
+                    }
+                }
+
+                if pointsDelta != 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: pointsDelta > 0 ? "arrow.up.right" : "arrow.down.right")
+                            .font(.system(size: 9, weight: .bold))
+                        Text("\(pointsDelta > 0 ? "+" : "")\(pointsDelta) vs last week")
+                            .font(.system(size: 10, weight: .black))
+                    }
+                    .foregroundStyle(pointsDelta > 0 ? MogboardTheme.accent : .red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(20)
+            .background(
+                ZStack {
+                    Color(red: 0.06, green: 0.06, blue: 0.06)
+                    MogboardTheme.accent.opacity(0.03)
+                }
+            )
+
+            Rectangle()
+                .fill(MogboardTheme.accent.opacity(0.3))
+                .frame(height: 2)
+
+            HStack {
+                Text("mogboard.app")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(MogboardTheme.mutedText)
+                Spacer()
+                Text("MOG OR GET MOGGED")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(MogboardTheme.accent.opacity(0.5))
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(Color(red: 0.04, green: 0.04, blue: 0.04))
+        }
+        .clipShape(.rect(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(MogboardTheme.accent.opacity(0.2), lineWidth: 1.5)
+        )
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.black)
+                .offset(x: 3, y: 4)
+        )
+        .padding(.horizontal, 20)
     }
 }
 

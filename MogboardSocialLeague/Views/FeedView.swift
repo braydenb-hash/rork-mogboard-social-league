@@ -41,15 +41,20 @@ struct FeedView: View {
                     VStack(spacing: 12) {
                         filterChips
 
-                        if filteredEvents.isEmpty {
+                        if sessionViewModel.isLoading && filteredEvents.isEmpty {
+                            SkeletonFeedList()
+                        } else if filteredEvents.isEmpty {
                             emptyState
                         } else {
                             LazyVStack(spacing: 10) {
                                 ForEach(Array(filteredEvents.enumerated()), id: \.element.id) { index, event in
-                                    FeedCard(event: event)
-                                        .opacity(appeared ? 1 : 0)
-                                        .offset(y: appeared ? 0 : 20)
-                                        .animation(.spring(response: 0.4).delay(Double(index) * 0.04), value: appeared)
+                                    NavigationLink(value: event) {
+                                        FeedCard(event: event)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .opacity(appeared ? 1 : 0)
+                                    .offset(y: appeared ? 0 : 20)
+                                    .animation(.spring(response: 0.4).delay(Double(index) * 0.04), value: appeared)
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -85,6 +90,9 @@ struct FeedView: View {
                 withAnimation(.spring(response: 0.5)) {
                     appeared = true
                 }
+            }
+            .navigationDestination(for: FeedEvent.self) { event in
+                FeedEventDestination(event: event, authViewModel: authViewModel, sessionViewModel: sessionViewModel)
             }
         }
     }
@@ -151,6 +159,143 @@ struct FeedView: View {
                 .font(.subheadline)
                 .foregroundStyle(MogboardTheme.mutedText)
                 .multilineTextAlignment(.center)
+        }
+    }
+}
+
+struct FeedEventDestination: View {
+    let event: FeedEvent
+    let authViewModel: AuthViewModel
+    @Bindable var sessionViewModel: SessionViewModel
+
+    var body: some View {
+        ZStack {
+            MogboardTheme.background
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(iconColor.opacity(0.15))
+                                .frame(width: 64, height: 64)
+                            Image(systemName: iconName)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(iconColor)
+                        }
+
+                        Text(event.users?.displayName.uppercased() ?? "UNKNOWN")
+                            .font(.system(size: 24, weight: .black, design: .default).width(.compressed))
+                            .foregroundStyle(.white)
+
+                        Text(event.title.uppercased())
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(iconColor)
+
+                        Text(event.description)
+                            .font(.subheadline)
+                            .foregroundStyle(MogboardTheme.mutedText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+
+                        if let date = event.createdAt {
+                            Text(date.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(MogboardTheme.mutedText.opacity(0.6))
+                        }
+                    }
+                    .padding(.top, 32)
+
+                    if event.eventType == "session_complete" || event.eventType == "spike" {
+                        eventStats
+                    }
+                }
+                .padding(.bottom, 40)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("EVENT")
+                    .font(.system(.headline, weight: .black))
+                    .foregroundStyle(.white)
+            }
+        }
+        .toolbarBackground(MogboardTheme.background, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    }
+
+    private var eventStats: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("EVENT DETAILS")
+                .font(.system(size: 11, weight: .black))
+                .foregroundStyle(MogboardTheme.mutedText)
+                .padding(.horizontal, 20)
+
+            MogCard {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(MogboardTheme.mutedText)
+                        Text(event.users?.displayName ?? "Unknown")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(iconColor)
+                                .frame(width: 6, height: 6)
+                            Text(event.eventType.replacingOccurrences(of: "_", with: " ").uppercased())
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundStyle(iconColor)
+                        }
+                    }
+
+                    if let title = event.users?.currentTitle {
+                        HStack(spacing: 4) {
+                            Text("TITLE:")
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundStyle(MogboardTheme.mutedText)
+                            Text(title)
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundStyle(MogboardTheme.accent)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+
+    private var iconName: String {
+        switch event.eventType {
+        case "session_complete": "checkmark.circle.fill"
+        case "spike": "bolt.heart.fill"
+        case "join": "person.badge.plus"
+        case "achievement": "star.fill"
+        case "callout": "megaphone.fill"
+        case "challenge": "figure.boxing"
+        case "personal_record": "medal.fill"
+        case "challenge_complete": "trophy.fill"
+        default: "circle.fill"
+        }
+    }
+
+    private var iconColor: Color {
+        switch event.eventType {
+        case "session_complete": MogboardTheme.accent
+        case "spike": .red
+        case "join": .blue
+        case "achievement": .orange
+        case "callout": .purple
+        case "challenge": .cyan
+        case "personal_record": .yellow
+        case "challenge_complete": .green
+        default: MogboardTheme.mutedText
         }
     }
 }

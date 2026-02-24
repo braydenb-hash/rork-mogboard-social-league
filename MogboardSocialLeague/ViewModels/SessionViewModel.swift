@@ -23,6 +23,9 @@ class SessionViewModel {
     var memberResults: [SessionResult] = []
     var filteredResults: [SessionResult] = []
     var newPersonalRecords: [PersonalRecord] = []
+    var previousTitle: String?
+    var newTitle: String?
+    var titleUpgraded = false
 
     private let supabase = SupabaseService.shared
     private let healthKit = HealthKitService.shared
@@ -169,7 +172,7 @@ class SessionViewModel {
             }
 
             sessionComplete = true
-            await updateUserTitle(userId: userId)
+            await checkTitleUpgrade(userId: userId)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -260,6 +263,9 @@ class SessionViewModel {
         currentBpm = 0
         sessionBpmReadings = []
         newPersonalRecords = []
+        titleUpgraded = false
+        previousTitle = nil
+        newTitle = nil
     }
 
     private func sampleBpmReadings() -> [Double] {
@@ -284,7 +290,7 @@ class SessionViewModel {
         return (basePoints + spikeBonus) * durationMultiplier
     }
 
-    private func updateUserTitle(userId: UUID) async {
+    private func checkTitleUpgrade(userId: UUID) async {
         let totalSessions = userResults.count + 1
         let title: String
         switch totalSessions {
@@ -296,6 +302,26 @@ class SessionViewModel {
         case 21...50: title = "Mogger"
         default: title = "Apex Mogger"
         }
+
+        let oldTitle = previousTitle ?? currentTitle(for: userResults.count)
+        if title != oldTitle {
+            previousTitle = oldTitle
+            newTitle = title
+            titleUpgraded = true
+        }
+
         try? await supabase.updateUserTitle(userId: userId, title: title)
+    }
+
+    private func currentTitle(for sessionCount: Int) -> String {
+        switch sessionCount {
+        case 0: "Unranked"
+        case 1...2: "Rookie"
+        case 3...5: "Contender"
+        case 6...10: "Warrior"
+        case 11...20: "Beast"
+        case 21...50: "Mogger"
+        default: "Apex Mogger"
+        }
     }
 }

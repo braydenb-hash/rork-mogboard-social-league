@@ -1,6 +1,13 @@
 import Foundation
 
-nonisolated struct FeedEvent: Codable, Identifiable, Sendable {
+nonisolated struct FeedEvent: Codable, Identifiable, Sendable, Hashable {
+    nonisolated static func == (lhs: FeedEvent, rhs: FeedEvent) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
     let id: UUID
     var leagueId: UUID
     var userId: UUID
