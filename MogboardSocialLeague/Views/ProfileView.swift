@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var showChallenge = false
     @State private var showNotificationSettings = false
     @State private var showWeeklyRecap = false
+    @State private var showDevMode = false
     @State private var appeared = false
     @State private var profilePrefs = ProfilePreferences.load()
 
@@ -43,6 +44,27 @@ struct ProfileView: View {
                         if !sessionViewModel.sessionHistory.isEmpty {
                             recentSessionsSection
                         }
+
+                        Button {
+                            showDevMode = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "hammer.fill")
+                                    .font(.system(.subheadline, weight: .bold))
+                                Text("DEV MODE")
+                                    .font(.system(.subheadline, weight: .bold))
+                            }
+                            .foregroundStyle(MogboardTheme.accent)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(MogboardTheme.accent.opacity(0.1))
+                            .clipShape(.rect(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(MogboardTheme.accent.opacity(0.2), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 20)
 
                         Button {
                             Task { await authViewModel.signOut() }
@@ -133,6 +155,9 @@ struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showWeeklyRecap) {
                 WeeklyRecapView(sessionViewModel: sessionViewModel, authViewModel: authViewModel)
+            }
+            .navigationDestination(isPresented: $showDevMode) {
+                DevModeView(authViewModel: authViewModel, sessionViewModel: sessionViewModel)
             }
             .onChange(of: showCustomization) { _, newValue in
                 if !newValue {
