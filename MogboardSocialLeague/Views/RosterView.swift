@@ -77,7 +77,7 @@ struct RosterView: View {
                                 Text("NO MEMBERS YET")
                                     .font(.system(size: 22, weight: .black, design: .default).width(.compressed))
                                     .foregroundStyle(.white)
-                                Text("Share your invite code to\nget your crew on board")
+                                Text("Share your code. Get your boys in.\nStart mogging.")
                                     .font(.subheadline)
                                     .foregroundStyle(MogboardTheme.mutedText)
                                     .multilineTextAlignment(.center)
@@ -242,8 +242,8 @@ struct RosterMemberCard: View {
 
                     HStack(spacing: 8) {
                         Text(member.users?.currentTitle ?? "Unranked")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(MogboardTheme.mutedText)
+                            .font(.system(.subheadline, weight: .black))
+                            .foregroundStyle(titleColor(member.users?.currentTitle))
 
                         if let entry = leaderboardEntry, entry.sessionsPlayed > 0 {
                             Text("·")
@@ -278,6 +278,17 @@ struct RosterMemberCard: View {
                         .foregroundStyle(MogboardTheme.mutedText)
                 }
             }
+        }
+    }
+
+    private func titleColor(_ title: String?) -> Color {
+        switch title {
+        case "The Unfeeling": .red
+        case "Low-Cortisol Chad": .orange
+        case "Cortisol-Pilled": .purple
+        case "Visibly Stressed": .blue
+        case "Mid": .cyan
+        default: MogboardTheme.accent
         }
     }
 

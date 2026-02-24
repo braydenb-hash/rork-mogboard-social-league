@@ -10,8 +10,8 @@ struct FeedView: View {
     enum FeedFilter: String, CaseIterable {
         case all = "ALL"
         case sessions = "GRINDS"
-        case spikes = "SPIKES"
-        case achievements = "BADGES"
+        case spikes = "CORTISOL EVENTS"
+        case achievements = "W'S"
         case challenges = "CHALLENGES"
 
         var eventTypes: [String] {
@@ -149,12 +149,12 @@ struct FeedView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(MogboardTheme.accent.opacity(0.3))
 
-            Text(selectedFilter == .all ? "NO ACTIVITY YET" : "NO \(selectedFilter.rawValue) YET")
+            Text(selectedFilter == .all ? "DEAD SILENT. NO CORTISOL DETECTED." : "NO \(selectedFilter.rawValue) YET")
                 .font(.system(size: 28, weight: .black, design: .default).width(.compressed))
                 .foregroundStyle(.white)
 
             Text(selectedFilter == .all
-                ? "Heart rate spikes, callouts, and\nmog moments will show up here"
+                ? "When your boys start grinding,\nthe chaos shows up here."
                 : "Nothing to show for this filter yet.\nKeep grinding!")
                 .font(.subheadline)
                 .foregroundStyle(MogboardTheme.mutedText)
@@ -332,7 +332,7 @@ struct FeedCard: View {
                             .foregroundStyle(MogboardTheme.mutedText)
                     }
 
-                    Text(event.title.uppercased())
+                    Text(spikeTitle(for: event).uppercased())
                         .font(.system(size: 11, weight: .black))
                         .foregroundStyle(.white)
 
@@ -440,6 +440,20 @@ struct FeedCard: View {
         case "challenge_complete": .green
         default: MogboardTheme.mutedText
         }
+    }
+
+    private func spikeTitle(for event: FeedEvent) -> String {
+        guard event.eventType == "spike" else { return event.title }
+        let name = event.users?.displayName ?? "Someone"
+        let options = [
+            "\(name)'s cortisol just spiked",
+            "\(name) saw something",
+            "\(name) is stress-maxxing",
+            "\(name)'s nervous system is cooked",
+            "\(name) is not okay"
+        ]
+        let index = abs(event.id.hashValue) % options.count
+        return options[index]
     }
 
     private var timeAgo: String {

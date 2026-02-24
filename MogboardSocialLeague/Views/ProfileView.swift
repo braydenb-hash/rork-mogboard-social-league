@@ -265,10 +265,15 @@ struct ProfileView: View {
 
             if thisWeekSessions > 0 || !sessionViewModel.userResults.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("THIS WEEK")
-                        .font(.system(size: 11, weight: .black))
-                        .foregroundStyle(MogboardTheme.mutedText)
-                        .padding(.horizontal, 20)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("THIS WEEK")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(MogboardTheme.mutedText)
+                        Text(weeklyRecapTitle)
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.horizontal, 20)
 
                     VStack(spacing: 0) {
                         HStack(spacing: 0) {
@@ -1035,6 +1040,17 @@ struct ProfileView: View {
             guard let date = item.result.completedAt else { return false }
             return date >= startOfWeek
         }.reduce(0) { $0 + $1.result.points }
+    }
+
+    private var weeklyRecapTitle: String {
+        let weekSessions = sessionsThisWeek
+        guard weekSessions > 0 else { return "The Void Week" }
+        let avg = weekAvgBpm
+        if avg >= 140 {
+            let weekNumber = Calendar.current.component(.weekOfYear, from: Date())
+            return "The Great Panic \u{2014} Week \(weekNumber)"
+        }
+        return "Week of Unprecedented Chill"
     }
 
     private var weekAvgBpm: Int {
