@@ -76,7 +76,7 @@ struct SessionHistoryView: View {
                                             .animation(.spring(response: 0.4).delay(Double(index) * 0.03), value: appeared)
                                             .contextMenu {
                                                 Button {
-                                                    let text = "\(item.session.name) — \(item.result.points) PTS · \(Int(item.result.avgBpm)) avg BPM"
+                                                    let text = "\(item.session.name) — \(item.result.points) AURA · \(Int(item.result.avgBpm)) avg BPM"
                                                     UIPasteboard.general.string = text
                                                 } label: {
                                                     Label("Copy Stats", systemImage: "doc.on.doc")
@@ -89,7 +89,7 @@ struct SessionHistoryView: View {
                                                 .font(.system(size: 11, weight: .black))
                                                 .foregroundStyle(MogboardTheme.mutedText)
                                             Spacer()
-                                            Text("\(items.count) SESSION\(items.count == 1 ? "" : "S")")
+                                            Text("\(items.count) GRIND\(items.count == 1 ? "" : "S")")
                                                 .font(.system(size: 9, weight: .bold))
                                                 .foregroundStyle(MogboardTheme.mutedText.opacity(0.6))
                                         }
@@ -110,7 +110,7 @@ struct SessionHistoryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("SESSION HISTORY")
+                Text("GRIND HISTORY")
                     .font(.system(.headline, weight: .black))
                     .foregroundStyle(.white)
             }
@@ -161,7 +161,7 @@ struct SessionHistoryView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(MogboardTheme.accent.opacity(0.3))
 
-            Text("NO SESSIONS YET")
+            Text("NO GRINDS YET")
                 .font(.system(size: 28, weight: .black, design: .default).width(.compressed))
                 .foregroundStyle(.white)
 
@@ -232,7 +232,7 @@ struct SessionHistoryCard: View {
                             Text("\(item.result.points)")
                                 .font(.system(.title3, design: .monospaced, weight: .black))
                                 .foregroundStyle(MogboardTheme.accent)
-                            Text("PTS")
+                            Text("AURA")
                                 .font(.system(size: 9, weight: .black))
                                 .foregroundStyle(MogboardTheme.mutedText)
                         }

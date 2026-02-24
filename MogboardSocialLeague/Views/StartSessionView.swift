@@ -208,7 +208,7 @@ struct StartSessionView: View {
                 .font(.system(size: 11, weight: .black))
                 .foregroundStyle(MogboardTheme.mutedText)
 
-            TextField("", text: $sessionName, prompt: Text("e.g. Morning Mog").foregroundStyle(MogboardTheme.mutedText))
+            TextField("", text: $sessionName, prompt: Text("e.g. Cortisol Hunt, Goon Sesh").foregroundStyle(MogboardTheme.mutedText))
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(14)

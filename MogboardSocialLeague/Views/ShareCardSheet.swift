@@ -141,7 +141,7 @@ struct ShareCardSheet: View {
                         Text("\(result.points)")
                             .font(.system(size: 48, weight: .black, design: .monospaced))
                             .foregroundStyle(accentColor)
-                        Text("POINTS")
+                        Text("AURA")
                             .font(.system(size: 10, weight: .black))
                             .foregroundStyle(MogboardTheme.mutedText)
                     }
@@ -223,7 +223,7 @@ struct ShareCardSheet: View {
                     Text("\(result.points)")
                         .font(.system(size: 32, weight: .black, design: .monospaced))
                         .foregroundStyle(accentColor)
-                    Text("PTS")
+                    Text("AURA")
                         .font(.system(size: 8, weight: .black))
                         .foregroundStyle(MogboardTheme.mutedText)
                 }
@@ -237,7 +237,7 @@ struct ShareCardSheet: View {
                     Text("\(Int(result.avgBpm))")
                         .font(.system(size: 32, weight: .black, design: .monospaced))
                         .foregroundStyle(.white)
-                    Text("AVG BPM")
+                    Text("BASE CORTISOL")
                         .font(.system(size: 8, weight: .black))
                         .foregroundStyle(MogboardTheme.mutedText)
                 }
@@ -290,7 +290,7 @@ struct ShareCardSheet: View {
                         .foregroundStyle(accentColor)
                         .shadow(color: accentColor.opacity(0.3), radius: 20)
 
-                    Text("POINTS")
+                    Text("AURA")
                         .font(.system(size: 14, weight: .black))
                         .foregroundStyle(MogboardTheme.mutedText)
                         .tracking(4)
@@ -364,7 +364,7 @@ struct ShareCardSheet: View {
     private var shareText: String {
         var text = "Just finished \(sessionName) on Mogboard!"
         text += "\n\n\(result.points) PTS"
-        text += " · \(Int(result.avgBpm)) avg BPM"
+        text += " · \(Int(result.avgBpm)) base cortisol"
         text += " · \(result.maxBpm) max BPM"
         if let type = sessionType {
             text += "\nMode: \(type.name)"

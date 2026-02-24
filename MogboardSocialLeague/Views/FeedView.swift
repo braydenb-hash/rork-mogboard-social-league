@@ -9,7 +9,7 @@ struct FeedView: View {
 
     enum FeedFilter: String, CaseIterable {
         case all = "ALL"
-        case sessions = "SESSIONS"
+        case sessions = "GRINDS"
         case spikes = "SPIKES"
         case achievements = "BADGES"
         case challenges = "CHALLENGES"
@@ -67,7 +67,7 @@ struct FeedView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("FEED")
+                    Text("CHAOS")
                         .font(.system(.headline, weight: .black))
                         .foregroundStyle(.white)
                 }

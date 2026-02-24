@@ -126,7 +126,7 @@ struct RosterView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("ROSTER")
+                    Text("CREW")
                         .font(.system(.headline, weight: .black))
                         .foregroundStyle(.white)
                 }
@@ -248,7 +248,7 @@ struct RosterMemberCard: View {
                         if let entry = leaderboardEntry, entry.sessionsPlayed > 0 {
                             Text("·")
                                 .foregroundStyle(MogboardTheme.mutedText)
-                            Text("\(entry.sessionsPlayed) sessions")
+                            Text("\(entry.sessionsPlayed) grinds")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(MogboardTheme.mutedText)
                         }
@@ -263,7 +263,7 @@ struct RosterMemberCard: View {
                             Text("\(entry.totalPoints)")
                                 .font(.system(.headline, design: .monospaced, weight: .black))
                                 .foregroundStyle(.white)
-                            Text("PTS")
+                            Text("AURA")
                                 .font(.system(size: 9, weight: .black))
                                 .foregroundStyle(MogboardTheme.mutedText)
                         } else if member.role == "owner" {

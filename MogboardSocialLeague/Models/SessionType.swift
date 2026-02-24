@@ -19,8 +19,8 @@ struct SessionType: Identifiable {
     static let all: [SessionType] = [
         SessionType(
             id: "freestyle",
-            name: "FREESTYLE",
-            subtitle: "Classic session. Points from avg BPM + spike bonus.",
+            name: "QUICK GRIND",
+            subtitle: "Standard chaos. Points from avg BPM + spike bonus.",
             icon: "bolt.heart.fill",
             color: MogboardTheme.accent,
             defaultDuration: 600,
@@ -28,8 +28,8 @@ struct SessionType: Identifiable {
         ),
         SessionType(
             id: "endurance",
-            name: "ENDURANCE GRIND",
-            subtitle: "Longer = better. Massive duration multiplier.",
+            name: "GOON SESH",
+            subtitle: "Longer = more deranged. Massive duration multiplier.",
             icon: "figure.run",
             color: .orange,
             defaultDuration: 1800,
@@ -37,8 +37,8 @@ struct SessionType: Identifiable {
         ),
         SessionType(
             id: "max_spike",
-            name: "MAX SPIKE",
-            subtitle: "Chase the highest peak BPM. Spike bonus x3.",
+            name: "CORTISOL HUNT",
+            subtitle: "Chase the peak. Your nervous system is the enemy.",
             icon: "bolt.fill",
             color: .red,
             defaultDuration: 300,
@@ -46,8 +46,8 @@ struct SessionType: Identifiable {
         ),
         SessionType(
             id: "zone_chaser",
-            name: "ZONE CHASER",
-            subtitle: "Stay in the cardio zone (130-160). Consistency wins.",
+            name: "THE MEWING ROOM",
+            subtitle: "Stay in zone 130–160. Consistency is the only personality trait that matters.",
             icon: "waveform.path.ecg",
             color: .cyan,
             defaultDuration: 900,

@@ -143,7 +143,7 @@ struct WeeklyRecapView: View {
         HStack(spacing: 10) {
             RecapStatCard(
                 value: "\(totalPoints)",
-                label: "TOTAL PTS",
+                label: "TOTAL AURA",
                 icon: "flame.fill",
                 color: MogboardTheme.accent,
                 delta: pointsDelta != 0 ? (pointsDelta > 0 ? "+\(pointsDelta)" : "\(pointsDelta)") : nil,
@@ -152,7 +152,7 @@ struct WeeklyRecapView: View {
 
             RecapStatCard(
                 value: "\(avgBpm)",
-                label: "AVG BPM",
+                label: "BASE CORTISOL",
                 icon: "heart.fill",
                 color: .red,
                 delta: {
@@ -250,7 +250,7 @@ struct WeeklyRecapView: View {
 
             VStack(spacing: 8) {
                 DeltaRow(
-                    label: "SESSIONS",
+                    label: "GRINDS",
                     thisWeek: thisWeekSessions.count,
                     lastWeek: lastWeekSessions.count,
                     icon: "checkmark.circle.fill",
@@ -264,7 +264,7 @@ struct WeeklyRecapView: View {
                     color: .orange
                 )
                 DeltaRow(
-                    label: "AVG BPM",
+                    label: "BASE CORTISOL",
                     thisWeek: avgBpm,
                     lastWeek: lastWeekAvgBpm,
                     icon: "heart.fill",
@@ -347,8 +347,8 @@ struct WeeklyRecapView: View {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 10) {
                         HStack(spacing: 16) {
-                            ShareStatBlock(label: "SESSIONS", value: "\(thisWeekSessions.count)")
-                            ShareStatBlock(label: "AVG BPM", value: "\(avgBpm)")
+                            ShareStatBlock(label: "GRINDS", value: "\(thisWeekSessions.count)")
+                            ShareStatBlock(label: "CORTISOL", value: "\(avgBpm)")
                             ShareStatBlock(label: "PEAK", value: "\(peakBpm)")
                         }
                     }

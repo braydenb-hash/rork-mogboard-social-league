@@ -24,10 +24,10 @@ struct PersonalRecord: Identifiable, Sendable {
         return [
             PersonalRecord(
                 id: "best_session",
-                name: "BEST SESSION",
+                name: "BEST GRIND",
                 icon: "flame.fill",
                 value: bestPoints,
-                unit: "PTS",
+                unit: "AURA",
                 isNew: bestPoints > prevBestPoints && prevBestPoints > 0
             ),
             PersonalRecord(
@@ -48,15 +48,15 @@ struct PersonalRecord: Identifiable, Sendable {
             ),
             PersonalRecord(
                 id: "total_points",
-                name: "CAREER POINTS",
+                name: "CAREER AURA",
                 icon: "trophy.fill",
                 value: totalPoints,
-                unit: "PTS",
+                unit: "AURA",
                 isNew: false
             ),
             PersonalRecord(
                 id: "total_sessions",
-                name: "TOTAL SESSIONS",
+                name: "TOTAL GRINDS",
                 icon: "checkmark.circle.fill",
                 value: totalSessions,
                 unit: "",

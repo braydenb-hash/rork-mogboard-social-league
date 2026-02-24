@@ -120,7 +120,7 @@ struct LeagueStatsView: View {
                 )
                 LeagueStatCard(
                     icon: "heart.fill",
-                    label: "TOTAL SESSIONS",
+                    label: "TOTAL GRINDS",
                     value: "\(totalLeagueSessions)",
                     color: .red
                 )
@@ -128,13 +128,13 @@ struct LeagueStatsView: View {
             HStack(spacing: 10) {
                 LeagueStatCard(
                     icon: "trophy.fill",
-                    label: "TOTAL POINTS",
+                    label: "TOTAL AURA",
                     value: "\(totalLeaguePoints)",
                     color: MogboardTheme.accent
                 )
                 LeagueStatCard(
                     icon: "waveform.path.ecg",
-                    label: "LEAGUE AVG BPM",
+                    label: "LEAGUE CORTISOL",
                     value: "\(leagueAvgBpm)",
                     color: .orange
                 )
@@ -175,7 +175,7 @@ struct LeagueStatsView: View {
                                 .foregroundStyle(.white)
                         }
                         Spacer()
-                        Text("\(mvp.totalPoints) PTS")
+                        Text("\(mvp.totalPoints) AURA")
                             .font(.system(.subheadline, design: .monospaced, weight: .black))
                             .foregroundStyle(MogboardTheme.accent)
                     }
@@ -204,7 +204,7 @@ struct LeagueStatsView: View {
                                 .foregroundStyle(.white)
                         }
                         Spacer()
-                        Text("\(grinder.sessionsPlayed) SESSIONS")
+                        Text("\(grinder.sessionsPlayed) GRINDS")
                             .font(.system(size: 11, weight: .black, design: .monospaced))
                             .foregroundStyle(MogboardTheme.mutedText)
                     }

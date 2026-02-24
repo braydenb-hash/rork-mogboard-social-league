@@ -126,9 +126,9 @@ struct MemberDetailView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            MemberStatCard(icon: "heart.fill", label: "SESSIONS", value: "\(sessionViewModel.memberResults.count)")
-            MemberStatCard(icon: "trophy.fill", label: "TOTAL PTS", value: "\(totalPoints)")
-            MemberStatCard(icon: "waveform.path.ecg", label: "AVG BPM", value: "\(avgBpm)")
+            MemberStatCard(icon: "heart.fill", label: "GRINDS", value: "\(sessionViewModel.memberResults.count)")
+            MemberStatCard(icon: "trophy.fill", label: "TOTAL AURA", value: "\(totalPoints)")
+            MemberStatCard(icon: "waveform.path.ecg", label: "BASE CORTISOL", value: "\(avgBpm)")
         }
         .padding(.horizontal, 20)
         .opacity(appeared ? 1 : 0)
@@ -237,21 +237,21 @@ struct MemberDetailView: View {
                     VStack(spacing: 8) {
                         let myTotalPts = myResults.reduce(0) { $0 + $1.points }
                         let theirTotalPts = theirResults.reduce(0) { $0 + $1.points }
-                        h2hRow(label: "TOTAL PTS", myValue: myTotalPts, theirValue: theirTotalPts)
+                        h2hRow(label: "TOTAL AURA", myValue: myTotalPts, theirValue: theirTotalPts)
 
                         let myAvg = myResults.reduce(0.0) { $0 + $1.avgBpm } / Double(myResults.count)
                         let theirAvg = theirResults.reduce(0.0) { $0 + $1.avgBpm } / Double(theirResults.count)
-                        h2hRow(label: "AVG BPM", myValue: Int(myAvg), theirValue: Int(theirAvg))
+                        h2hRow(label: "BASE CORTISOL", myValue: Int(myAvg), theirValue: Int(theirAvg))
 
                         let myMax = myResults.map(\.maxBpm).max() ?? 0
                         let theirMax = theirResults.map(\.maxBpm).max() ?? 0
                         h2hRow(label: "PEAK BPM", myValue: myMax, theirValue: theirMax)
 
-                        h2hRow(label: "SESSIONS", myValue: myResults.count, theirValue: theirResults.count)
+                        h2hRow(label: "GRINDS", myValue: myResults.count, theirValue: theirResults.count)
 
                         let myBest = myResults.map(\.points).max() ?? 0
                         let theirBest = theirResults.map(\.points).max() ?? 0
-                        h2hRow(label: "BEST SESSION", myValue: myBest, theirValue: theirBest)
+                        h2hRow(label: "BEST GRIND", myValue: myBest, theirValue: theirBest)
                     }
                     .padding(16)
                     .background(MogboardTheme.cardBackground)
@@ -333,7 +333,7 @@ struct MemberDetailView: View {
                     MogCard {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("\(result.points) PTS")
+                                Text("\(result.points) AURA")
                                     .font(.system(.subheadline, design: .monospaced, weight: .black))
                                     .foregroundStyle(MogboardTheme.accent)
 

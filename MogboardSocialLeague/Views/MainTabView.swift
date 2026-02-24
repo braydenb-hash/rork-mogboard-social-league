@@ -5,10 +5,10 @@ enum AppTab: Int, CaseIterable {
 
     var label: String {
         switch self {
-        case .roster: "Roster"
+        case .roster: "CREW"
         case .leaderboard: "Board"
         case .session: "Mog"
-        case .feed: "Feed"
+        case .feed: "CHAOS"
         case .profile: "Profile"
         }
     }
@@ -95,7 +95,7 @@ struct MainTabView: View {
 
     private func tabButton(_ tab: AppTab) -> some View {
         Button {
-            withAnimation(.snappy(duration: 0.2)) {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
                 selectedTab = tab
             }
         } label: {

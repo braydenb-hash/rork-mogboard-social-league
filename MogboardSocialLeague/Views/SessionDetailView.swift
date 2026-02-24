@@ -94,7 +94,7 @@ struct SessionDetailView: View {
                 .foregroundStyle(MogboardTheme.accent)
                 .contentTransition(.numericText())
 
-            Text("POINTS EARNED")
+            Text("AURA EARNED")
                 .font(.system(size: 10, weight: .black))
                 .foregroundStyle(MogboardTheme.mutedText)
         }
@@ -260,7 +260,7 @@ struct SessionDetailView: View {
     private var statsGrid: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                DetailStatCard(icon: "heart.fill", label: "AVG BPM", value: "\(Int(item.result.avgBpm))", color: MogboardTheme.accent)
+                DetailStatCard(icon: "heart.fill", label: "BASE CORTISOL", value: "\(Int(item.result.avgBpm))", color: MogboardTheme.accent)
                 DetailStatCard(icon: "bolt.heart.fill", label: "MAX BPM", value: "\(item.result.maxBpm)", color: .red)
             }
             HStack(spacing: 10) {

@@ -247,7 +247,7 @@ struct ActiveSessionView: View {
                         MogCard {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("POINTS EARNED")
+                                    Text("AURA EARNED")
                                         .font(.system(size: 10, weight: .black))
                                         .foregroundStyle(MogboardTheme.mutedText)
                                     Text("\(result.points)")
@@ -263,7 +263,7 @@ struct ActiveSessionView: View {
                         }
 
                         HStack(spacing: 10) {
-                            ResultStatCard(label: "AVG BPM", value: "\(Int(result.avgBpm))")
+                            ResultStatCard(label: "BASE CORTISOL", value: "\(Int(result.avgBpm))")
                             ResultStatCard(label: "MAX BPM", value: "\(result.maxBpm)")
                             ResultStatCard(label: "MIN BPM", value: "\(result.minBpm)")
                         }

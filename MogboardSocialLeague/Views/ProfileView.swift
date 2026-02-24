@@ -238,17 +238,17 @@ struct ProfileView: View {
         HStack(spacing: 10) {
             ProfileStatCard(
                 icon: "heart.fill",
-                label: "SESSIONS",
+                label: "GRINDS",
                 value: "\(sessionViewModel.userResults.count)"
             )
             ProfileStatCard(
                 icon: "trophy.fill",
-                label: "TOTAL PTS",
+                label: "TOTAL AURA",
                 value: "\(totalPoints)"
             )
             ProfileStatCard(
                 icon: "waveform.path.ecg",
-                label: "AVG BPM",
+                label: "BASE CORTISOL",
                 value: "\(avgBpm)"
             )
         }
@@ -286,7 +286,7 @@ struct ProfileView: View {
                                 Text("\(thisWeekSessions)")
                                     .font(.system(.title2, design: .monospaced, weight: .black))
                                     .foregroundStyle(MogboardTheme.accent)
-                                Text("SESSIONS")
+                                Text("GRINDS")
                                     .font(.system(size: 9, weight: .black))
                                     .foregroundStyle(MogboardTheme.mutedText)
                             }
@@ -297,7 +297,7 @@ struct ProfileView: View {
                                 Text("\(thisWeekPoints)")
                                     .font(.system(.title2, design: .monospaced, weight: .black))
                                     .foregroundStyle(.white)
-                                Text("POINTS")
+                                Text("AURA")
                                     .font(.system(size: 9, weight: .black))
                                     .foregroundStyle(MogboardTheme.mutedText)
                             }
@@ -308,7 +308,7 @@ struct ProfileView: View {
                                 Text("\(weekAvgBpm)")
                                     .font(.system(.title2, design: .monospaced, weight: .black))
                                     .foregroundStyle(.white)
-                                Text("AVG BPM")
+                                Text("BASE CORTISOL")
                                     .font(.system(size: 9, weight: .black))
                                     .foregroundStyle(MogboardTheme.mutedText)
                             }
@@ -545,7 +545,7 @@ struct ProfileView: View {
                         .padding(16)
 
                         HStack {
-                            Text("LAST \(recentSessions.count) SESSIONS")
+                            Text("LAST \(recentSessions.count) GRINDS")
                                 .font(.system(size: 9, weight: .black))
                                 .foregroundStyle(MogboardTheme.mutedText)
                             Spacer()
@@ -829,7 +829,7 @@ struct ProfileView: View {
     private var recentSessionsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("RECENT SESSIONS")
+                Text("RECENT GRINDS")
                     .font(.system(size: 11, weight: .black))
                     .foregroundStyle(MogboardTheme.mutedText)
 
@@ -864,7 +864,7 @@ struct ProfileView: View {
                                 }
                                 Spacer()
                                 HStack(spacing: 6) {
-                                    Text("\(item.result.points) PTS")
+                                    Text("\(item.result.points) AURA")
                                         .font(.system(.subheadline, design: .monospaced, weight: .black))
                                         .foregroundStyle(MogboardTheme.accent)
                                     Image(systemName: "chevron.right")

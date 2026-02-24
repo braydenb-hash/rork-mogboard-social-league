@@ -301,7 +301,7 @@ struct LeaderboardView: View {
                     .foregroundStyle(MogboardTheme.accent)
                     .contentTransition(.numericText())
 
-                Text("PTS")
+                Text("AURA")
                     .font(.system(size: 9, weight: .black))
                     .foregroundStyle(MogboardTheme.mutedText)
 
@@ -313,11 +313,13 @@ struct LeaderboardView: View {
             .frame(height: height)
             .padding(.vertical, 12)
             .background(MogboardTheme.cardBackground)
-            .clipShape(.rect(cornerRadius: 12))
+            .clipShape(.rect(cornerRadius: MogboardTheme.cardCornerRadius))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(rank == 1 ? MogboardTheme.accent.opacity(0.4) : MogboardTheme.cardBorder, lineWidth: rank == 1 ? 2 : 1)
+                RoundedRectangle(cornerRadius: MogboardTheme.cardCornerRadius)
+                    .stroke(rank == 1 ? MogboardTheme.accent.opacity(0.7) : MogboardTheme.cardBorder, lineWidth: rank == 1 ? 2 : 1)
             )
+            .shadow(color: rank == 1 ? MogboardTheme.accent.opacity(0.4) : .clear, radius: 12)
+            .shadow(color: rank == 1 ? MogboardTheme.accent.opacity(0.2) : .clear, radius: 24)
         }
         .buttonStyle(.plain)
     }
@@ -353,7 +355,7 @@ struct LeaderboardView: View {
                                 Text(entry.user.displayName.uppercased())
                                     .font(.system(.subheadline, weight: .bold))
                                     .foregroundStyle(.white)
-                                Text("\(entry.sessionsPlayed) sessions · \(Int(entry.avgBpm)) avg BPM")
+                                Text("\(entry.sessionsPlayed) grinds · \(Int(entry.avgBpm)) avg BPM")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(MogboardTheme.mutedText)
                             }

@@ -73,7 +73,7 @@ struct MogboardWidgetSmall: View {
                 Text("\(entry.totalPoints)")
                     .font(.system(size: 28, weight: .black, design: .monospaced))
                     .foregroundStyle(accentColor)
-                Text("TOTAL PTS")
+                Text("TOTAL AURA")
                     .font(.system(size: 8, weight: .black))
                     .foregroundStyle(Color(white: 0.45))
             }
