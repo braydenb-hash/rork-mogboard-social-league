@@ -9,6 +9,7 @@ struct ActiveSessionView: View {
     @State private var showCancelConfirm = false
     @State private var completionAppeared = false
     @State private var showShareSheet = false
+    @State private var showConfetti = false
 
     var body: some View {
         ZStack {
@@ -22,6 +23,12 @@ struct ActiveSessionView: View {
             } else {
                 activeContent
             }
+
+            ConfettiView(
+                colors: confettiColors,
+                isActive: $showConfetti
+            )
+            .ignoresSafeArea()
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -353,7 +360,15 @@ struct ActiveSessionView: View {
             withAnimation {
                 completionAppeared = true
             }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                showConfetti = true
+            }
         }
+    }
+
+    private var confettiColors: [Color] {
+        let base = sessionTypeColor
+        return [base, base.opacity(0.7), .white, .yellow, base.opacity(0.5)]
     }
 
     private var sessionTypeColor: Color {

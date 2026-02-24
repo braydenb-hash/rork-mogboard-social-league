@@ -11,6 +11,8 @@ struct ProfileView: View {
     @State private var showAchievements = false
     @State private var showCustomization = false
     @State private var showChallenge = false
+    @State private var showNotificationSettings = false
+    @State private var showWeeklyRecap = false
     @State private var appeared = false
     @State private var profilePrefs = ProfilePreferences.load()
 
@@ -74,6 +76,13 @@ struct ProfileView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 12) {
                         Button {
+                            showNotificationSettings = true
+                        } label: {
+                            Image(systemName: "bell.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(MogboardTheme.mutedText)
+                        }
+                        Button {
                             showCustomization = true
                         } label: {
                             Image(systemName: "paintbrush.fill")
@@ -118,6 +127,12 @@ struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showChallenge) {
                 ChallengeView(authViewModel: authViewModel, sessionViewModel: sessionViewModel)
+            }
+            .navigationDestination(isPresented: $showNotificationSettings) {
+                NotificationSettingsView()
+            }
+            .navigationDestination(isPresented: $showWeeklyRecap) {
+                WeeklyRecapView(sessionViewModel: sessionViewModel, authViewModel: authViewModel)
             }
             .onChange(of: showCustomization) { _, newValue in
                 if !newValue {
@@ -286,6 +301,30 @@ struct ProfileView: View {
                             .fill(.black)
                             .offset(x: 3, y: MogboardTheme.cardShadowOffset)
                     )
+                    .padding(.horizontal, 20)
+                    .onTapGesture {
+                        showWeeklyRecap = true
+                    }
+
+                    Button {
+                        showWeeklyRecap = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("VIEW FULL RECAP")
+                                .font(.system(size: 10, weight: .black))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 8, weight: .bold))
+                        }
+                        .foregroundStyle(MogboardTheme.accent)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(MogboardTheme.accent.opacity(0.08))
+                        .clipShape(.rect(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(MogboardTheme.accent.opacity(0.15), lineWidth: 1)
+                        )
+                    }
                     .padding(.horizontal, 20)
                 }
                 .opacity(appeared ? 1 : 0)
